@@ -1,0 +1,70 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+model Role {
+  id        Int      @id @default(autoincrement())
+  name      String   @unique // ADMIN, DOCTOR, RECEPTIONIST, ACCOUNTANT
+  users     UserRole[]
+}
+
+model User {
+  id           Int       @id @default(autoincrement())
+  fullName     String
+  username     String    @unique
+  email        String    @unique
+  password     String
+  isActive     Boolean   @default(true)
+  loginAttempts Int      @default(0)
+  lockedUntil  DateTime?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  roles        UserRole[]
+  refreshTokens RefreshToken[]
+  resetTokens  PasswordResetToken[]
+  logs         SystemLog[]
+}
+
+model UserRole {
+  id     Int  @id @default(autoincrement())
+  userId Int
+  roleId Int
+  user   User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role   Role @relation(fields: [roleId], references: [id])
+
+  @@unique([userId, roleId])
+}
+
+model RefreshToken {
+  id        Int      @id @default(autoincrement())
+  token     String   @unique @db.VarChar(500)
+  userId    Int
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+}
+
+model PasswordResetToken {
+  id        Int      @id @default(autoincrement())
+  token     String   @unique
+  userId    Int
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt DateTime
+  used      Boolean  @default(false)
+  createdAt DateTime @default(now())
+}
+
+model SystemLog {
+  id        Int      @id @default(autoincrement())
+  userId    Int?
+  user      User?    @relation(fields: [userId], references: [id])
+  action    String
+  detail    String?  @db.Text
+  ip        String?
+  createdAt DateTime @default(now())
+}
