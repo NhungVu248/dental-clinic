@@ -4,28 +4,34 @@ import { useForm } from 'react-hook-form'
 import { authApi } from '../../api/auth.api'
 import { useAuthStore } from '../../stores/auth.store'
 import { HeartPulse, Eye, EyeOff, Loader2, ShieldCheck, UserRound, Calculator, Stethoscope } from 'lucide-react'
-import clsx from 'clsx'
 
 const ROLES = [
-  { key: 'ADMIN',        label: 'Quản trị viên', icon: ShieldCheck,  color: 'bg-purple-50 border-purple-200 text-purple-600' },
-  { key: 'RECEPTIONIST', label: 'Lễ tân',         icon: UserRound,    color: 'bg-blue-600 border-blue-600 text-white' },
-  { key: 'ACCOUNTANT',   label: 'Kế toán',        icon: Calculator,   color: 'bg-green-50 border-green-200 text-green-600' },
-  { key: 'DOCTOR',       label: 'Bác sĩ',         icon: Stethoscope,  color: 'bg-teal-50 border-teal-200 text-teal-600' },
+  { key: 'ADMIN',        label: 'Quản trị viên', icon: ShieldCheck,  activeColor: '#7c3aed', activeBg: '#ede9fe', border: '#c4b5fd' },
+  { key: 'RECEPTIONIST', label: 'Lễ tân',         icon: UserRound,    activeColor: '#ffffff', activeBg: '#2563eb', border: '#2563eb' },
+  { key: 'ACCOUNTANT',   label: 'Kế toán',        icon: Calculator,   activeColor: '#16a34a', activeBg: '#dcfce7', border: '#86efac' },
+  { key: 'DOCTOR',       label: 'Bác sĩ',         icon: Stethoscope,  activeColor: '#0d9488', activeBg: '#ccfbf1', border: '#5eead4' },
 ]
 
-// Màn hình chọn role khi user có nhiều role
-function RoleSelector({ roles, onSelect }: { roles: string[], onSelect: (r: string) => void }) {
+function RoleSelector({ roles, onSelect }: { roles: string[]; onSelect: (r: string) => void }) {
   return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
-      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8 w-full max-w-sm">
-        <h2 className="text-xl font-bold text-center mb-2">Chọn vai trò</h2>
-        <p className="text-gray-500 text-sm text-center mb-6">Bạn muốn đăng nhập với vai trò nào?</p>
-        <div className="space-y-3">
+    <div style={{ minHeight: '100vh', backgroundColor: '#f9fafb', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px' }}>
+      <div style={{ backgroundColor: 'white', borderRadius: '16px', border: '1px solid #f1f5f9', padding: '32px', width: '100%', maxWidth: '360px' }}>
+        <h2 style={{ fontSize: '20px', fontWeight: 700, textAlign: 'center', marginBottom: '8px', color: '#111827' }}>Chọn vai trò</h2>
+        <p style={{ fontSize: '13px', color: '#6b7280', textAlign: 'center', marginBottom: '24px' }}>Bạn muốn đăng nhập với vai trò nào?</p>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
           {ROLES.filter(r => roles.includes(r.key)).map(r => (
             <button key={r.key} onClick={() => onSelect(r.key)}
-              className="w-full flex items-center gap-3 p-4 border-2 border-gray-100 rounded-xl hover:border-blue-400 hover:bg-blue-50 transition-all">
-              <r.icon size={20} className="text-blue-600" />
-              <span className="font-medium">{r.label}</span>
+              style={{
+                display: 'flex', alignItems: 'center', gap: '12px',
+                padding: '14px 16px', border: '2px solid #e5e7eb',
+                borderRadius: '10px', background: 'none', cursor: 'pointer',
+                fontSize: '14px', fontWeight: 500, color: '#374151',
+              }}
+              onMouseEnter={e => { (e.currentTarget as HTMLElement).style.borderColor = '#3b82f6'; (e.currentTarget as HTMLElement).style.backgroundColor = '#eff6ff' }}
+              onMouseLeave={e => { (e.currentTarget as HTMLElement).style.borderColor = '#e5e7eb'; (e.currentTarget as HTMLElement).style.backgroundColor = 'transparent' }}
+            >
+              <r.icon size={20} color="#3b82f6" />
+              {r.label}
             </button>
           ))}
         </div>
@@ -37,6 +43,7 @@ function RoleSelector({ roles, onSelect }: { roles: string[], onSelect: (r: stri
 export default function LoginPage() {
   const navigate = useNavigate()
   const { setAuth, setActiveRole } = useAuthStore()
+  const [selectedRole, setSelectedRole] = useState<string>('RECEPTIONIST')
   const [showPw, setShowPw] = useState(false)
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
@@ -54,13 +61,12 @@ export default function LoginPage() {
       if (user.roles.includes('ADMIN')) {
         setAuth(token, user)
         setActiveRole('ADMIN')
-        navigate('/dashboard') // sẽ tạo sau
+        navigate('/dashboard')
       } else if (user.roles.length === 1) {
         setAuth(token, user)
         setActiveRole(user.roles[0])
         navigate('/dashboard')
       } else {
-        // Nhiều role → hiện màn chọn
         setPendingLogin({ token, user })
       }
     } catch (err: any) {
@@ -80,105 +86,152 @@ export default function LoginPage() {
   if (pendingLogin) return <RoleSelector roles={pendingLogin.user.roles} onSelect={handleRoleSelect} />
 
   return (
-    <div className="min-h-screen flex">
+    <div style={{ display: 'flex', width: '100vw', height: '100vh' }}>
+
       {/* Left panel */}
-      <div className="hidden lg:flex flex-col justify-between w-[45%] bg-gradient-to-br from-blue-600 to-blue-800 p-12 text-white">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center">
-            <HeartPulse size={20} />
+<div style={{
+  width: '46%', background: 'linear-gradient(135deg, #1d4ed8 0%, #1e40af 60%, #1e3a8a 100%)',
+  color: 'white', display: 'flex', flexDirection: 'column',
+  justifyContent: 'space-between', padding: '40px 48px'
+}}>
+  {/* Logo */}
+  <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+    <div style={{ width: '40px', height: '40px', backgroundColor: 'rgba(255,255,255,0.2)', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      <HeartPulse size={20} />
+    </div>
+    <div>
+      <p style={{ fontWeight: 700, fontSize: '15px' }}>DentCare Pro</p>
+      <p style={{ fontSize: '12px', color: 'rgba(255,255,255,0.6)' }}>Hệ thống Quản lý Phòng khám</p>
+    </div>
+  </div>
+
+  {/* Content */}
+  <div>
+    <h2 style={{ fontSize: '36px', fontWeight: 800, lineHeight: 1.25, marginBottom: '16px' }}>
+      Quản lý phòng khám<br />thông minh & hiệu quả
+    </h2>
+    <p style={{ fontSize: '14px', color: 'rgba(255,255,255,0.75)', lineHeight: 1.8, marginBottom: '32px' }}>
+      DentCare Pro cung cấp giải pháp quản lý toàn diện — từ đặt lịch hẹn, hồ sơ bệnh nhân, ca làm việc bác sĩ đến báo cáo doanh thu và thống kê chuyên sâu.
+    </p>
+
+    {/* Features */}
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+      {[
+        { icon: '📅', title: 'Quản lý lịch hẹn',     desc: 'Đặt lịch, xác nhận và theo dõi trạng thái lịch hẹn theo thời gian thực' },
+        { icon: '🦷', title: 'Hồ sơ bệnh nhân',       desc: 'Lưu trữ và tra cứu hồ sơ, lịch sử khám và điều trị đầy đủ' },
+        { icon: '👨‍⚕️', title: 'Quản lý nhân sự',    desc: 'Phân công bác sĩ, ca làm việc và theo dõi hiệu suất làm việc' },
+        { icon: '📊', title: 'Báo cáo & Thống kê',    desc: 'Doanh thu, tỉ lệ đúng hẹn và các chỉ số vận hành phòng khám' },
+      ].map(f => (
+        <div key={f.title} style={{ display: 'flex', alignItems: 'flex-start', gap: '14px' }}>
+          <div style={{
+            width: '36px', height: '36px', backgroundColor: 'rgba(255,255,255,0.15)',
+            borderRadius: '8px', display: 'flex', alignItems: 'center',
+            justifyContent: 'center', fontSize: '18px', flexShrink: 0
+          }}>
+            {f.icon}
           </div>
           <div>
-            <p className="font-bold">DentCare Pro</p>
-            <p className="text-blue-200 text-xs">Hệ thống quản lý phòng khám nha khoa</p>
+            <p style={{ fontSize: '13px', fontWeight: 700, marginBottom: '2px' }}>{f.title}</p>
+            <p style={{ fontSize: '12px', color: 'rgba(255,255,255,0.6)', lineHeight: 1.5 }}>{f.desc}</p>
           </div>
         </div>
+      ))}
+    </div>
+  </div>
 
-        <div>
-          <h2 className="text-4xl font-bold mb-4">Chào mừng trở lại!</h2>
-          <p className="text-blue-200 leading-relaxed">
-            Hệ thống quản lý phòng khám nha khoa toàn diện — đặt lịch, quản lý ca làm việc,
-            theo dõi bệnh nhân và báo cáo thống kê.
-          </p>
-          <div className="grid grid-cols-2 gap-4 mt-8">
-            {[
-              { label: 'Lịch hẹn hôm nay', value: '24' },
-              { label: 'Bác sĩ trực ca', value: '6' },
-              { label: 'Bệnh nhân mới', value: '8' },
-              { label: 'Tỉ lệ đúng hẹn', value: '94%' },
-            ].map(s => (
-              <div key={s.label} className="bg-white/10 rounded-xl p-4">
-                <p className="text-2xl font-bold">{s.value}</p>
-                <p className="text-blue-200 text-sm">{s.label}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        <p className="text-blue-300 text-sm">© 2025 DentCare Pro. Phiên bản 4.0</p>
-      </div>
+  <p style={{ fontSize: '12px', color: 'rgba(255,255,255,0.4)' }}>© 2026 DentCare Pro. Phiên bản 1.0</p>
+</div>
 
       {/* Right panel */}
-      <div className="flex-1 flex items-center justify-center p-8">
-        <div className="w-full max-w-md">
-          <div className="text-center mb-8">
-            <h2 className="text-2xl font-bold text-gray-900">Đăng nhập hệ thống</h2>
-            <p className="text-gray-500 text-sm mt-1">Chọn vai trò và nhập thông tin đăng nhập</p>
+      <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '40px', backgroundColor: '#ffffff' }}>
+        <div style={{ width: '100%', maxWidth: '420px' }}>
+          <div style={{ textAlign: 'center', marginBottom: '28px' }}>
+            <h2 style={{ fontSize: '24px', fontWeight: 800, color: '#111827' }}>Đăng nhập hệ thống</h2>
+            <p style={{ fontSize: '13px', color: '#6b7280', marginTop: '6px' }}>Chọn vai trò và nhập thông tin đăng nhập</p>
           </div>
 
-          {/* Role buttons (visual only) */}
-          <div className="grid grid-cols-2 gap-3 mb-6">
-            {ROLES.map(r => (
-              <div key={r.key}
-                className={clsx('flex flex-col items-center gap-2 p-4 rounded-xl border-2 cursor-default', r.color)}>
-                <r.icon size={22} />
-                <span className="text-sm font-medium">{r.label}</span>
-              </div>
-            ))}
+          {/* Role selector — bấm được */}
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginBottom: '24px' }}>
+            {ROLES.map(r => {
+              const isSelected = selectedRole === r.key
+              return (
+                <button key={r.key} onClick={() => setSelectedRole(r.key)}
+                  style={{
+                    display: 'flex', flexDirection: 'column', alignItems: 'center',
+                    gap: '8px', padding: '14px 12px', borderRadius: '12px', cursor: 'pointer',
+                    border: `2px solid ${isSelected ? r.border : '#e5e7eb'}`,
+                    backgroundColor: isSelected ? r.activeBg : '#fafafa',
+                    transition: 'all 0.15s',
+                  }}>
+                  <r.icon size={22} color={isSelected ? r.activeColor : '#9ca3af'} />
+                  <span style={{ fontSize: '13px', fontWeight: 600, color: isSelected ? r.activeColor : '#6b7280' }}>
+                    {r.label}
+                  </span>
+                </button>
+              )
+            })}
           </div>
 
           {error && (
-            <div className="bg-red-50 text-red-600 text-sm px-4 py-3 rounded-lg mb-4">
+            <div style={{
+              backgroundColor: '#fef2f2', border: '1px solid #fca5a5', borderRadius: '8px',
+              padding: '10px 14px', marginBottom: '16px', color: '#dc2626', fontSize: '13px'
+            }}>
               {error}
             </div>
           )}
 
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Tên đăng nhập</label>
-              <input
-                {...register('username')}
-                placeholder="Nhập tên đăng nhập"
-                className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm outline-none focus:ring-2 focus:ring-blue-500"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Mật khẩu</label>
-              <div className="relative">
-                <input
-                  {...register('password')}
-                  type={showPw ? 'text' : 'password'}
-                  placeholder="••••••••"
-                  className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm outline-none focus:ring-2 focus:ring-blue-500 pr-10"
+          <form onSubmit={handleSubmit(onSubmit)}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+              <div>
+                <label style={{ display: 'block', fontSize: '13px', fontWeight: 500, color: '#374151', marginBottom: '6px' }}>
+                  Tên đăng nhập
+                </label>
+                <input {...register('username')} placeholder="Nhập tên đăng nhập"
+                  style={{
+                    width: '100%', padding: '10px 14px', border: '1px solid #e5e7eb',
+                    borderRadius: '8px', fontSize: '14px', outline: 'none',
+                    boxSizing: 'border-box', color: '#111827'
+                  }}
                 />
-                <button type="button" onClick={() => setShowPw(!showPw)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400">
-                  {showPw ? <EyeOff size={16} /> : <Eye size={16} />}
-                </button>
               </div>
-            </div>
 
-            <div className="flex justify-end">
-              <a href="/forgot-password" className="text-sm text-blue-600 hover:underline">
-                Quên mật khẩu?
-              </a>
-            </div>
+              <div>
+                <label style={{ display: 'block', fontSize: '13px', fontWeight: 500, color: '#374151', marginBottom: '6px' }}>
+                  Mật khẩu
+                </label>
+                <div style={{ position: 'relative' }}>
+                  <input {...register('password')} type={showPw ? 'text' : 'password'} placeholder="••••••••"
+                    style={{
+                      width: '100%', padding: '10px 40px 10px 14px', border: '1px solid #e5e7eb',
+                      borderRadius: '8px', fontSize: '14px', outline: 'none',
+                      boxSizing: 'border-box', color: '#111827'
+                    }}
+                  />
+                  <button type="button" onClick={() => setShowPw(!showPw)}
+                    style={{ position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>
+                    {showPw ? <EyeOff size={16} color="#9ca3af" /> : <Eye size={16} color="#9ca3af" />}
+                  </button>
+                </div>
+              </div>
 
-            <button type="submit" disabled={loading}
-              className="w-full bg-blue-600 hover:bg-blue-700 disabled:opacity-60 text-white font-medium py-2.5 rounded-lg text-sm flex items-center justify-center gap-2 transition-colors">
-              {loading && <Loader2 size={16} className="animate-spin" />}
-              Đăng nhập
-            </button>
+              <div style={{ textAlign: 'right' }}>
+                <a href="/forgot-password" style={{ fontSize: '13px', color: '#3b82f6', textDecoration: 'none' }}>
+                  Quên mật khẩu?
+                </a>
+              </div>
+
+              <button type="submit" disabled={loading}
+                style={{
+                  width: '100%', padding: '11px', backgroundColor: loading ? '#93c5fd' : '#2563eb',
+                  color: 'white', border: 'none', borderRadius: '8px', fontSize: '14px',
+                  fontWeight: 600, cursor: loading ? 'not-allowed' : 'pointer',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px'
+                }}>
+                {loading && <Loader2 size={16} />}
+                Đăng nhập
+              </button>
+            </div>
           </form>
         </div>
       </div>

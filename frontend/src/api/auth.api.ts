@@ -13,10 +13,14 @@ api.interceptors.request.use((config) => {
 
 // Auth APIs
 export const authApi = {
-  checkSetup: () => api.get('/auth/check-setup'),
-  setup:      (data: any) => api.post('/auth/setup', data),
-  login:      (data: any) => api.post('/auth/login', data),
+  checkSetup:     () => api.get('/auth/check-setup'),
+  setup:          (data: any) => api.post('/auth/setup', data),
+  register:       (data: any) => api.post('/auth/register', data),
+  login:          (data: any) => api.post('/auth/login', data),
   changePassword: (data: any) => api.post('/auth/change-password', data),
   forgotPassword: (data: any) => api.post('/auth/forgot-password', data),
   resetPassword:  (data: any) => api.post('/auth/reset-password', data),
+  getUsers:       () => api.get('/auth/users'),
+  toggleStatus:   (id: number, isActive: boolean) => api.patch(`/auth/users/${id}/status`, { isActive }),
+  deleteUser:     (id: number) => api.delete(`/auth/users/${id}`),
 }
