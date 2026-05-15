@@ -3,6 +3,24 @@ import { logAction } from '../../utils/logger'
 
 const prisma = new PrismaClient()
 
+// ─── Status helpers ──────────────────────────────────────────
+
+export const STATUS_LABELS: Record<string, string> = {
+  INACTIVE:     'Chưa hoạt động',
+  ACTIVE:       'Hoạt động',
+  SUSPENDED:    'Tạm dừng',
+  DISCONTINUED: 'Ngừng sử dụng',
+}
+
+const VALID_TRANSITIONS: Record<string, string[]> = {
+  INACTIVE:     ['ACTIVE'],
+  ACTIVE:       ['SUSPENDED', 'DISCONTINUED'],
+  SUSPENDED:    ['ACTIVE', 'DISCONTINUED'],
+  DISCONTINUED: [],
+}
+
+// ─── UC08: Doctor list ───────────────────────────────────────
+
 export const getDoctors = async () => {
   return prisma.user.findMany({
     where: {
@@ -14,14 +32,14 @@ export const getDoctors = async () => {
   })
 }
 
+// ─── UC08: Service groups ────────────────────────────────────
+
 export const getServiceGroups = async (search?: string) => {
   const groups = await prisma.serviceGroup.findMany({
     where: search ? { name: { contains: search } } : undefined,
     include: {
       doctors: {
-        include: {
-          doctor: { select: { id: true, fullName: true } },
-        },
+        include: { doctor: { select: { id: true, fullName: true } } },
       },
       _count: { select: { services: true } },
     },
@@ -53,9 +71,7 @@ export const createServiceGroup = async (
     data: {
       name: data.name.trim(),
       description: data.description?.trim() || null,
-      doctors: {
-        create: data.doctorIds.map(id => ({ doctorId: id })),
-      },
+      doctors: { create: data.doctorIds.map(id => ({ doctorId: id })) },
     },
   })
 
@@ -123,8 +139,144 @@ export const getGroupServices = async (id: number) => {
   const services = await prisma.service.findMany({
     where: { serviceGroupId: id },
     orderBy: { code: 'asc' },
-    select: { id: true, code: true, name: true, isActive: true },
+    select: { id: true, code: true, name: true, status: true },
   })
 
   return { groupName: group.name, services }
+}
+
+// ─── UC09: Services CRUD ─────────────────────────────────────
+
+export const getServices = async (filter: {
+  search?: string
+  groupId?: number
+  status?: string
+}) => {
+  return prisma.service.findMany({
+    where: {
+      AND: [
+        filter.search
+          ? { OR: [{ code: { contains: filter.search } }, { name: { contains: filter.search } }] }
+          : {},
+        filter.groupId ? { serviceGroupId: filter.groupId } : {},
+        filter.status  ? { status: filter.status }          : {},
+      ],
+    },
+    include: { serviceGroup: { select: { id: true, name: true } } },
+    orderBy: { code: 'asc' },
+  })
+}
+
+export const getServiceById = async (id: number) => {
+  const service = await prisma.service.findUnique({
+    where: { id },
+    include: { serviceGroup: { select: { id: true, name: true } } },
+  })
+  if (!service) throw { status: 404, message: 'Không tìm thấy dịch vụ' }
+  return service
+}
+
+export const createService = async (
+  data: { code: string; name: string; serviceGroupId: number; description?: string },
+  adminId: number,
+  ip: string
+) => {
+  if (!data.code?.trim()) throw { status: 400, message: 'Mã dịch vụ không được để trống' }
+  if (!data.name?.trim()) throw { status: 400, message: 'Tên dịch vụ không được để trống' }
+
+  const dupCode = await prisma.service.findUnique({ where: { code: data.code.trim() } })
+  if (dupCode) throw { status: 409, message: 'Mã dịch vụ đã tồn tại' }
+
+  const group = await prisma.serviceGroup.findUnique({ where: { id: data.serviceGroupId } })
+  if (!group) throw { status: 404, message: 'Nhóm dịch vụ không tồn tại' }
+
+  const service = await prisma.service.create({
+    data: {
+      code: data.code.trim().toUpperCase(),
+      name: data.name.trim(),
+      description: data.description?.trim() || null,
+      serviceGroupId: data.serviceGroupId,
+      status: 'INACTIVE',
+    },
+  })
+
+  await logAction('CREATE_SERVICE', `Tạo dịch vụ: ${service.code} – ${service.name}`, adminId, ip)
+  return service
+}
+
+export const updateService = async (
+  id: number,
+  data: { code?: string; name?: string; serviceGroupId?: number; description?: string },
+  adminId: number,
+  ip: string
+) => {
+  const service = await prisma.service.findUnique({ where: { id } })
+  if (!service) throw { status: 404, message: 'Không tìm thấy dịch vụ' }
+
+  if (service.status === 'DISCONTINUED')
+    throw { status: 400, message: 'Không thể chỉnh sửa dịch vụ đã ngừng sử dụng' }
+
+  if (data.code && data.code.trim().toUpperCase() !== service.code) {
+    const dup = await prisma.service.findUnique({ where: { code: data.code.trim().toUpperCase() } })
+    if (dup) throw { status: 409, message: 'Mã dịch vụ đã tồn tại' }
+  }
+
+  if (data.serviceGroupId && data.serviceGroupId !== service.serviceGroupId) {
+    const group = await prisma.serviceGroup.findUnique({ where: { id: data.serviceGroupId } })
+    if (!group) throw { status: 404, message: 'Nhóm dịch vụ không tồn tại' }
+  }
+
+  await prisma.service.update({
+    where: { id },
+    data: {
+      code: data.code ? data.code.trim().toUpperCase() : service.code,
+      name: data.name?.trim() ?? service.name,
+      description: data.description !== undefined ? (data.description?.trim() || null) : service.description,
+      serviceGroupId: data.serviceGroupId ?? service.serviceGroupId,
+    },
+  })
+
+  await logAction('UPDATE_SERVICE', `Cập nhật dịch vụ: ${service.code} – ${service.name}`, adminId, ip)
+}
+
+export const deleteService = async (id: number, adminId: number, ip: string) => {
+  const service = await prisma.service.findUnique({ where: { id } })
+  if (!service) throw { status: 404, message: 'Không tìm thấy dịch vụ' }
+
+  if (service.usageCount > 0)
+    throw {
+      status: 400,
+      message: `Không thể xóa dịch vụ đã có ${service.usageCount.toLocaleString('vi-VN')} lượt sử dụng. Hãy chuyển sang "Ngừng sử dụng" thay thế.`,
+    }
+
+  await prisma.service.delete({ where: { id } })
+  await logAction('DELETE_SERVICE', `Xóa dịch vụ: ${service.code} – ${service.name}`, adminId, ip)
+}
+
+export const changeServiceStatus = async (
+  id: number,
+  newStatus: string,
+  adminId: number,
+  ip: string
+) => {
+  const service = await prisma.service.findUnique({ where: { id } })
+  if (!service) throw { status: 404, message: 'Không tìm thấy dịch vụ' }
+
+  const allowed = VALID_TRANSITIONS[service.status] ?? []
+  if (!allowed.includes(newStatus))
+    throw {
+      status: 400,
+      message: `Không thể chuyển từ "${STATUS_LABELS[service.status]}" sang "${STATUS_LABELS[newStatus]}"`,
+    }
+
+  const updateData: Record<string, unknown> = { status: newStatus }
+  if (newStatus === 'ACTIVE' && !service.activatedAt) updateData.activatedAt = new Date()
+
+  await prisma.service.update({ where: { id }, data: updateData })
+  await logAction(
+    'CHANGE_SERVICE_STATUS',
+    `${service.code}: ${STATUS_LABELS[service.status]} → ${STATUS_LABELS[newStatus]}`,
+    adminId,
+    ip
+  )
 }

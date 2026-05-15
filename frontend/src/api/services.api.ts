@@ -17,23 +17,45 @@ export interface GroupService {
   id: number
   code: string
   name: string
-  isActive: boolean
+  status: string
+}
+
+export interface Service {
+  id: number
+  code: string
+  name: string
+  description: string | null
+  status: string
+  usageCount: number
+  activatedAt: string | null
+  serviceGroupId: number
+  serviceGroup: { id: number; name: string }
+  createdAt: string
+  updatedAt: string
 }
 
 export const serviceApi = {
-  getDoctors: () => api.get<Doctor[]>('/services/doctors'),
-
-  getGroups: (search?: string) =>
+  // UC08
+  getDoctors:       () => api.get<Doctor[]>('/services/doctors'),
+  getGroups:        (search?: string) =>
     api.get<ServiceGroup[]>('/services/groups', { params: search ? { search } : undefined }),
-
-  createGroup: (data: { name: string; description?: string; doctorIds: number[] }) =>
+  createGroup:      (data: { name: string; description?: string; doctorIds: number[] }) =>
     api.post('/services/groups', data),
-
-  updateGroup: (id: number, data: { name?: string; description?: string; doctorIds?: number[] }) =>
+  updateGroup:      (id: number, data: { name?: string; description?: string; doctorIds?: number[] }) =>
     api.put(`/services/groups/${id}`, data),
-
-  deleteGroup: (id: number) => api.delete(`/services/groups/${id}`),
-
+  deleteGroup:      (id: number) => api.delete(`/services/groups/${id}`),
   getGroupServices: (id: number) =>
     api.get<{ groupName: string; services: GroupService[] }>(`/services/groups/${id}/services`),
+
+  // UC09
+  getServices:     (params?: { search?: string; groupId?: number; status?: string }) =>
+    api.get<Service[]>('/services', { params }),
+  getServiceById:  (id: number) => api.get<Service>(`/services/${id}`),
+  createService:   (data: { code: string; name: string; serviceGroupId: number; description?: string }) =>
+    api.post('/services', data),
+  updateService:   (id: number, data: { code?: string; name?: string; serviceGroupId?: number; description?: string }) =>
+    api.put(`/services/${id}`, data),
+  changeStatus:    (id: number, status: string) =>
+    api.patch(`/services/${id}/status`, { status }),
+  deleteService:   (id: number) => api.delete(`/services/${id}`),
 }

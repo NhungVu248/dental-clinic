@@ -321,9 +321,9 @@ model Service {
   code           String       @unique
   name           String
   description    String?      @db.Text
-  price          Decimal?     @db.Decimal(12, 2)
-  unit           String?
-  isActive       Boolean      @default(true)
+  status         String       @default("INACTIVE") // INACTIVE | ACTIVE | SUSPENDED | DISCONTINUED
+  usageCount     Int          @default(0)
+  activatedAt    DateTime?
   serviceGroupId Int
   serviceGroup   ServiceGroup @relation(fields: [serviceGroupId], references: [id])
   createdAt      DateTime     @default(now())
