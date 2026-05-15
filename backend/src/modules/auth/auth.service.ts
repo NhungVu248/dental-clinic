@@ -108,13 +108,20 @@ export const login = async (
     include: { roles: { include: { role: true } } }
   })
 
-  if (!user) throw new Error('INVALID_CREDENTIALS')
+  if (!user) {
+    await logAction('LOGIN_FAILED', `Sai tên đăng nhập: ${username}`, undefined, ip, 'FAILED')
+    throw new Error('INVALID_CREDENTIALS')
+  }
 
   if (user.lockedUntil && user.lockedUntil > new Date()) {
+    await logAction('LOGIN_FAILED', `Tài khoản bị khóa tạm thời: ${username}`, user.id, ip, 'FAILED')
     throw new Error('ACCOUNT_LOCKED')
   }
 
-  if (!user.isActive) throw new Error('ACCOUNT_DISABLED')
+  if (!user.isActive) {
+    await logAction('LOGIN_FAILED', `Tài khoản bị vô hiệu hóa: ${username}`, user.id, ip, 'FAILED')
+    throw new Error('ACCOUNT_DISABLED')
+  }
 
   const isValid = await comparePassword(password, user.password)
 
@@ -125,6 +132,7 @@ export const login = async (
       : { loginAttempts: attempts }
 
     await prisma.user.update({ where: { id: user.id }, data: lockData })
+    await logAction('LOGIN_FAILED', `Sai mật khẩu lần ${attempts}/5`, user.id, ip, 'FAILED')
     throw new Error('INVALID_CREDENTIALS')
   }
 
@@ -473,6 +481,104 @@ export const deleteUser = async (
 
   await prisma.user.delete({ where: { id: targetId } })
   await logAction('DELETE_USER', `Xóa tài khoản: ${user.username}`, operatorId, ip)
+}
+
+// ─── UC07: Nhật ký hoạt động ─────────────────────────────────
+
+export interface LogFilter {
+  search?: string
+  action?: string
+  status?: string
+  module?: string
+  startDate?: string
+  endDate?: string
+  page?: number
+  limit?: number
+}
+
+export const getLogs = async (filter: LogFilter) => {
+  const page  = Math.max(1, filter.page  ?? 1)
+  const limit = Math.min(50, Math.max(1, filter.limit ?? 10))
+  const skip  = (page - 1) * limit
+
+  const where: any = {}
+
+  if (filter.status) where.status = filter.status
+  if (filter.module) where.module = filter.module
+  if (filter.action) where.action = filter.action
+
+  if (filter.startDate || filter.endDate) {
+    where.createdAt = {}
+    if (filter.startDate) where.createdAt.gte = new Date(filter.startDate)
+    if (filter.endDate)   where.createdAt.lte = new Date(new Date(filter.endDate).setHours(23, 59, 59, 999))
+  }
+
+  if (filter.search) {
+    where.OR = [
+      { action: { contains: filter.search } },
+      { detail: { contains: filter.search } },
+      { ip:     { contains: filter.search } },
+      { user:   { OR: [
+        { fullName: { contains: filter.search } },
+        { username: { contains: filter.search } },
+        { email:    { contains: filter.search } },
+      ]}},
+    ]
+  }
+
+  const [total, logs] = await Promise.all([
+    prisma.systemLog.count({ where }),
+    prisma.systemLog.findMany({
+      where,
+      orderBy: { createdAt: 'desc' },
+      skip,
+      take: limit,
+      include: { user: { select: { id: true, fullName: true, username: true, email: true } } },
+    }),
+  ])
+
+  return { total, page, limit, totalPages: Math.ceil(total / limit), logs }
+}
+
+export const exportLogsCSV = async (filter: Omit<LogFilter, 'page' | 'limit'>) => {
+  const where: any = {}
+  if (filter.status) where.status = filter.status
+  if (filter.module) where.module = filter.module
+  if (filter.action) where.action = filter.action
+  if (filter.startDate || filter.endDate) {
+    where.createdAt = {}
+    if (filter.startDate) where.createdAt.gte = new Date(filter.startDate)
+    if (filter.endDate)   where.createdAt.lte = new Date(new Date(filter.endDate).setHours(23, 59, 59, 999))
+  }
+  if (filter.search) {
+    where.OR = [
+      { action: { contains: filter.search } },
+      { detail: { contains: filter.search } },
+      { user: { OR: [{ fullName: { contains: filter.search } }, { email: { contains: filter.search } }] } },
+    ]
+  }
+
+  const logs = await prisma.systemLog.findMany({
+    where,
+    orderBy: { createdAt: 'desc' },
+    take: 5000,
+    include: { user: { select: { fullName: true, email: true } } },
+  })
+
+  const escape = (v: string) => `"${(v ?? '').replace(/"/g, '""')}"`
+  const header = ['Thời gian', 'Hành động', 'Người dùng', 'Email', 'Module', 'Trạng thái', 'Chi tiết', 'IP']
+  const rows = logs.map(l => [
+    new Date(l.createdAt).toLocaleString('vi-VN'),
+    l.action,
+    l.user?.fullName ?? '',
+    l.user?.email ?? '',
+    l.module ?? '',
+    l.status,
+    l.detail ?? '',
+    l.ip ?? '',
+  ].map(escape))
+
+  return [header.map(escape), ...rows].map(r => r.join(',')).join('\n')
 }
 
 // ─── Bằng cấp & Chứng chỉ ────────────────────────────────────

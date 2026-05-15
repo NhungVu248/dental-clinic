@@ -57,6 +57,22 @@ export const authApi = {
 
   deleteUser:      (id: number) => api.delete(`/auth/users/${id}`),
 
+  // UC07: Nhật ký hoạt động
+  getLogs: (params: Record<string, string | number | undefined>) =>
+    api.get('/auth/logs', { params }),
+  exportLogs: async (params: Record<string, string | undefined>) => {
+    const res = await api.get('/auth/logs/export', {
+      params,
+      responseType: 'blob',
+    })
+    const url = URL.createObjectURL(new Blob([res.data], { type: 'text/csv;charset=utf-8;' }))
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `nhat-ky-${new Date().toISOString().slice(0, 10)}.csv`
+    a.click()
+    URL.revokeObjectURL(url)
+  },
+
   // Bằng cấp & Chứng chỉ
   getCertificates:    (id: number) => api.get(`/auth/users/${id}/certificates`),
   uploadCertificate:  (id: number, file: File) => {

@@ -77,6 +77,8 @@ model SystemLog {
   action    String
   detail    String?  @db.Text
   ip        String?
+  status    String   @default("SUCCESS")   // SUCCESS | FAILED
+  module    String?                         // Auth | User | Service
   createdAt DateTime @default(now())
 }
 

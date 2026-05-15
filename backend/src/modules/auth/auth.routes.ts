@@ -28,6 +28,8 @@ router.post('/logout', authenticate, ctrl.logout)
 router.post('/change-password', authenticate, ctrl.changePassword)
 
 // Protected — ADMIN only
+router.get('/logs',                     authenticate, requireRole('ADMIN'), ctrl.getLogs)
+router.get('/logs/export',              authenticate, requireRole('ADMIN'), ctrl.exportLogs)
 router.get('/stats',                    authenticate, requireRole('ADMIN'), ctrl.getDashboardStats)
 router.get('/users',                    authenticate, requireRole('ADMIN'), ctrl.getUsers)
 router.post('/users',                   authenticate, requireRole('ADMIN'), ctrl.createStaff)

@@ -277,6 +277,34 @@ export const sendEmailToUser = async (req: Request, res: Response) => {
   }
 }
 
+// UC07: Nhật ký hoạt động
+export const getLogs = async (req: Request, res: Response) => {
+  try {
+    const { search, action, status, module, startDate, endDate, page, limit } = req.query as Record<string, string>
+    const result = await authService.getLogs({
+      search, action, status, module, startDate, endDate,
+      page:  page  ? parseInt(page,  10) : undefined,
+      limit: limit ? parseInt(limit, 10) : undefined,
+    })
+    res.json(result)
+  } catch {
+    res.status(500).json({ message: 'Lỗi hệ thống' })
+  }
+}
+
+export const exportLogs = async (req: Request, res: Response) => {
+  try {
+    const { search, action, status, module, startDate, endDate } = req.query as Record<string, string>
+    const csv = await authService.exportLogsCSV({ search, action, status, module, startDate, endDate })
+    const filename = `nhat-ky-${new Date().toISOString().slice(0, 10)}.csv`
+    res.setHeader('Content-Type', 'text/csv; charset=utf-8')
+    res.setHeader('Content-Disposition', `attachment; filename="${filename}"`)
+    res.send('﻿' + csv) // BOM cho Excel đọc được UTF-8
+  } catch {
+    res.status(500).json({ message: 'Lỗi xuất file' })
+  }
+}
+
 // Dashboard stats
 export const getDashboardStats = async (_: Request, res: Response) => {
   try {

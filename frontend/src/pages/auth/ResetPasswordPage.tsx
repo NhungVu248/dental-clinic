@@ -4,7 +4,7 @@ import { useForm } from 'react-hook-form'
 import { z } from 'zod'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { authApi } from '../../api/auth.api'
-import { Eye, EyeOff, Loader2, CheckCircle2, HeartPulse } from 'lucide-react'
+import { Eye, EyeOff, Loader2, CheckCircle2, HeartPulse, ShieldCheck, Lock, ArrowLeft } from 'lucide-react'
 
 const schema = z.object({
   newPassword: z.string()
@@ -22,11 +22,23 @@ const schema = z.object({
 type FormData = z.infer<typeof schema>
 
 const policies = [
-  { label: '≥ 8 ký tự',                 regex: /.{8,}/ },
-  { label: 'Ít nhất 1 chữ HOA (A–Z)',    regex: /[A-Z]/ },
-  { label: 'Ít nhất 1 chữ thường (a–z)', regex: /[a-z]/ },
-  { label: 'Ít nhất 1 chữ số (0–9)',     regex: /[0-9]/ },
-  { label: 'Ít nhất 1 ký tự đặc biệt',  regex: /[^A-Za-z0-9]/ },
+  { label: 'Tối thiểu 8 ký tự',           regex: /.{8,}/ },
+  { label: 'Ít nhất 1 chữ HOA (A–Z)',      regex: /[A-Z]/ },
+  { label: 'Ít nhất 1 chữ thường (a–z)',   regex: /[a-z]/ },
+  { label: 'Ít nhất 1 chữ số (0–9)',       regex: /[0-9]/ },
+  { label: 'Ít nhất 1 ký tự đặc biệt',    regex: /[^A-Za-z0-9]/ },
+]
+
+function getStrength(pw: string): number {
+  return policies.filter(p => p.regex.test(pw)).length
+}
+
+const strengthConfig = [
+  { label: 'Rất yếu',  color: '#ef4444' },
+  { label: 'Yếu',      color: '#f97316' },
+  { label: 'Trung bình', color: '#eab308' },
+  { label: 'Tốt',      color: '#22c55e' },
+  { label: 'Mạnh',     color: '#16a34a' },
 ]
 
 export default function ResetPasswordPage() {
@@ -39,7 +51,7 @@ export default function ResetPasswordPage() {
   const [error, setError] = useState('')
   const [success, setSuccess] = useState(false)
   const [loading, setLoading] = useState(false)
-  const [countdown, setCountdown] = useState(3)
+  const [countdown, setCountdown] = useState(5)
 
   useEffect(() => {
     if (!token) navigate('/forgot-password', { replace: true })
@@ -61,6 +73,7 @@ export default function ResetPasswordPage() {
   })
 
   const watchedNew = watch('newPassword', '')
+  const strength = getStrength(watchedNew)
 
   const onSubmit = async (data: FormData) => {
     setLoading(true)
@@ -77,86 +90,213 @@ export default function ResetPasswordPage() {
 
   if (!token) return null
 
-  return (
-    <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center p-4">
-
-      {/* Brand */}
-      <div className="text-center mb-6">
-        <div className="inline-flex items-center justify-center w-14 h-14 bg-blue-600 rounded-2xl mb-3">
-          <HeartPulse className="text-white" size={28} />
+  /* ───────── Success screen ───────── */
+  if (success) {
+    return (
+      <div style={{
+        minHeight: '100vh', background: 'linear-gradient(135deg, #1d4ed8 0%, #1e3a8a 100%)',
+        display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '24px',
+      }}>
+        <div style={{
+          backgroundColor: 'white', borderRadius: '24px', padding: '56px 48px',
+          maxWidth: '440px', width: '100%', textAlign: 'center',
+          boxShadow: '0 25px 60px rgba(0,0,0,0.2)',
+        }}>
+          <div style={{
+            width: '80px', height: '80px', borderRadius: '50%',
+            background: 'linear-gradient(135deg, #22c55e, #16a34a)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            margin: '0 auto 24px',
+          }}>
+            <CheckCircle2 size={40} color="white" />
+          </div>
+          <h2 style={{ fontSize: '22px', fontWeight: 800, color: '#111827', marginBottom: '10px' }}>
+            Đặt lại mật khẩu thành công!
+          </h2>
+          <p style={{ fontSize: '14px', color: '#6b7280', lineHeight: 1.7, marginBottom: '28px' }}>
+            Mật khẩu của bạn đã được cập nhật. Hệ thống sẽ tự động chuyển về trang đăng nhập sau{' '}
+            <span style={{ fontWeight: 700, color: '#2563eb' }}>{countdown}s</span>.
+          </p>
+          <Link to="/login" style={{
+            display: 'inline-flex', alignItems: 'center', gap: '8px',
+            padding: '11px 28px', backgroundColor: '#2563eb', color: 'white',
+            borderRadius: '10px', fontSize: '14px', fontWeight: 600, textDecoration: 'none',
+          }}>
+            Đăng nhập ngay
+          </Link>
         </div>
-        <h1 className="text-xl font-bold text-gray-900">DentCare Pro</h1>
-        <p className="text-sm text-gray-500">Hệ thống Quản lý Phòng khám</p>
+      </div>
+    )
+  }
+
+  /* ───────── Main form ───────── */
+  return (
+    <div style={{ display: 'flex', width: '100vw', height: '100vh' }}>
+
+      {/* Left panel */}
+      <div style={{
+        width: '44%', background: 'linear-gradient(135deg, #1d4ed8 0%, #1e40af 60%, #1e3a8a 100%)',
+        color: 'white', display: 'flex', flexDirection: 'column',
+        justifyContent: 'space-between', padding: '40px 48px',
+      }}>
+        {/* Logo */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+          <div style={{
+            width: '40px', height: '40px', backgroundColor: 'rgba(255,255,255,0.2)',
+            borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center',
+          }}>
+            <HeartPulse size={20} />
+          </div>
+          <div>
+            <p style={{ fontWeight: 700, fontSize: '15px' }}>DentCare Pro</p>
+            <p style={{ fontSize: '12px', color: 'rgba(255,255,255,0.6)' }}>Hệ thống Quản lý Phòng khám</p>
+          </div>
+        </div>
+
+        {/* Center content */}
+        <div>
+          <div style={{
+            width: '72px', height: '72px', backgroundColor: 'rgba(255,255,255,0.15)',
+            borderRadius: '20px', display: 'flex', alignItems: 'center', justifyContent: 'center',
+            marginBottom: '28px',
+          }}>
+            <Lock size={34} />
+          </div>
+
+          <h2 style={{ fontSize: '32px', fontWeight: 800, lineHeight: 1.3, marginBottom: '16px' }}>
+            Bảo vệ tài khoản<br />của bạn
+          </h2>
+          <p style={{ fontSize: '14px', color: 'rgba(255,255,255,0.75)', lineHeight: 1.8, marginBottom: '36px' }}>
+            Hãy tạo một mật khẩu mạnh để bảo vệ tài khoản DentCare Pro. Mật khẩu tốt giúp ngăn chặn truy cập trái phép vào dữ liệu phòng khám.
+          </p>
+
+          {/* Tips */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+            {[
+              { icon: '🔐', tip: 'Không dùng lại mật khẩu từ tài khoản khác' },
+              { icon: '🔀', tip: 'Kết hợp chữ hoa, chữ thường, số và ký tự đặc biệt' },
+              { icon: '🚫', tip: 'Tránh dùng tên, ngày sinh hoặc thông tin cá nhân' },
+              { icon: '🔒', tip: 'Không chia sẻ mật khẩu với bất kỳ ai' },
+            ].map(item => (
+              <div key={item.tip} style={{ display: 'flex', alignItems: 'flex-start', gap: '12px' }}>
+                <div style={{
+                  width: '34px', height: '34px', backgroundColor: 'rgba(255,255,255,0.15)',
+                  borderRadius: '8px', display: 'flex', alignItems: 'center',
+                  justifyContent: 'center', fontSize: '16px', flexShrink: 0,
+                }}>
+                  {item.icon}
+                </div>
+                <p style={{ fontSize: '13px', color: 'rgba(255,255,255,0.75)', lineHeight: 1.5, marginTop: '7px' }}>
+                  {item.tip}
+                </p>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <p style={{ fontSize: '12px', color: 'rgba(255,255,255,0.4)' }}>© 2026 DentCare Pro. Phiên bản 1.0</p>
       </div>
 
-      {/* Card */}
-      <div className="w-full max-w-md bg-white rounded-2xl shadow-sm border border-gray-100 p-8">
+      {/* Right panel */}
+      <div style={{
+        flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center',
+        padding: '40px', backgroundColor: '#ffffff', overflowY: 'auto',
+      }}>
+        <div style={{ width: '100%', maxWidth: '420px' }}>
 
-        {success ? (
-          <div className="text-center py-4 space-y-3">
-            <div className="inline-flex items-center justify-center w-14 h-14 bg-green-100 rounded-full">
-              <CheckCircle2 className="text-green-600" size={32} />
+          {/* Header */}
+          <div style={{ marginBottom: '32px' }}>
+            <div style={{
+              display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+              width: '48px', height: '48px', backgroundColor: '#eff6ff',
+              borderRadius: '14px', marginBottom: '20px',
+            }}>
+              <ShieldCheck size={24} color="#2563eb" />
             </div>
-            <p className="font-semibold text-gray-800">Đặt lại mật khẩu thành công!</p>
-            <p className="text-sm text-gray-500">
-              Đang chuyển về trang đăng nhập sau <span className="font-medium text-blue-600">{countdown}s</span>...
+            <h2 style={{ fontSize: '24px', fontWeight: 800, color: '#111827', marginBottom: '6px' }}>
+              Đặt lại mật khẩu
+            </h2>
+            <p style={{ fontSize: '13px', color: '#6b7280' }}>
+              Tạo mật khẩu mới an toàn cho tài khoản của bạn
             </p>
-            <Link to="/login" className="inline-block text-sm text-blue-600 hover:underline mt-2">
-              Đăng nhập ngay
-            </Link>
           </div>
-        ) : (
-          <>
-            <div className="text-center mb-6">
-              <h2 className="text-xl font-bold text-gray-900">Đặt lại mật khẩu</h2>
-              <p className="text-sm text-gray-500 mt-1">
-                Tạo mật khẩu mới cho tài khoản của bạn
-              </p>
+
+          {/* Error */}
+          {error && (
+            <div style={{
+              backgroundColor: '#fef2f2', border: '1px solid #fca5a5', borderRadius: '10px',
+              padding: '12px 16px', marginBottom: '20px', color: '#dc2626',
+              fontSize: '13px', display: 'flex', alignItems: 'center', gap: '8px',
+            }}>
+              <span style={{ fontSize: '16px' }}>⚠️</span>
+              {error}
             </div>
+          )}
 
-            {error && (
-              <div className="bg-red-50 text-red-600 text-sm px-4 py-3 rounded-lg mb-4">
-                {error}
-              </div>
-            )}
-
-            <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+          <form onSubmit={handleSubmit(onSubmit)}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
 
               {/* New password */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Mật khẩu mới <span className="text-red-500">*</span>
+                <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, color: '#374151', marginBottom: '8px' }}>
+                  Mật khẩu mới <span style={{ color: '#ef4444' }}>*</span>
                 </label>
-                <div className="relative">
+                <div style={{ position: 'relative' }}>
                   <input
                     {...register('newPassword')}
                     type={showNew ? 'text' : 'password'}
-                    placeholder="••••••••"
-                    className={`w-full border rounded-lg px-3 py-2.5 pr-10 text-sm outline-none focus:ring-2 focus:ring-blue-500 ${
-                      errors.newPassword ? 'border-red-300' : 'border-gray-200'
-                    }`}
+                    placeholder="Nhập mật khẩu mới"
+                    style={{
+                      width: '100%', padding: '11px 42px 11px 14px',
+                      border: `1.5px solid ${errors.newPassword ? '#fca5a5' : '#e5e7eb'}`,
+                      borderRadius: '10px', fontSize: '14px', outline: 'none',
+                      boxSizing: 'border-box', color: '#111827',
+                      transition: 'border-color 0.15s',
+                    }}
+                    onFocus={e => { e.currentTarget.style.borderColor = '#3b82f6' }}
+                    onBlur={e => { e.currentTarget.style.borderColor = errors.newPassword ? '#fca5a5' : '#e5e7eb' }}
                   />
-                  <button
-                    type="button"
-                    onClick={() => setShowNew(v => !v)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400"
-                  >
-                    {showNew ? <EyeOff size={16} /> : <Eye size={16} />}
+                  <button type="button" onClick={() => setShowNew(v => !v)}
+                    style={{ position: 'absolute', right: '13px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', padding: 0, color: '#9ca3af' }}>
+                    {showNew ? <EyeOff size={17} /> : <Eye size={17} />}
                   </button>
                 </div>
 
+                {/* Strength bar */}
+                {watchedNew.length > 0 && (
+                  <div style={{ marginTop: '10px' }}>
+                    <div style={{ display: 'flex', gap: '4px', marginBottom: '6px' }}>
+                      {[1, 2, 3, 4, 5].map(i => (
+                        <div key={i} style={{
+                          flex: 1, height: '4px', borderRadius: '99px',
+                          backgroundColor: i <= strength ? strengthConfig[strength - 1]?.color : '#e5e7eb',
+                          transition: 'background-color 0.3s',
+                        }} />
+                      ))}
+                    </div>
+                    {strength > 0 && (
+                      <p style={{ fontSize: '12px', color: strengthConfig[strength - 1]?.color, fontWeight: 600 }}>
+                        {strengthConfig[strength - 1]?.label}
+                      </p>
+                    )}
+                  </div>
+                )}
+
                 {/* Policy checklist */}
-                <div className="mt-2 space-y-1">
+                <div style={{ marginTop: '12px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '6px' }}>
                   {policies.map(p => {
                     const ok = p.regex.test(watchedNew)
                     return (
-                      <div key={p.label} className="flex items-center gap-2">
-                        <CheckCircle2
-                          size={13}
-                          className={ok ? 'text-green-500' : 'text-gray-300'}
-                          fill={ok ? '#dcfce7' : 'none'}
-                        />
-                        <span className={`text-xs ${ok ? 'text-green-600' : 'text-gray-400'}`}>
+                      <div key={p.label} style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        <div style={{
+                          width: '16px', height: '16px', borderRadius: '50%', flexShrink: 0,
+                          display: 'flex', alignItems: 'center', justifyContent: 'center',
+                          backgroundColor: ok ? '#dcfce7' : '#f3f4f6',
+                          transition: 'background-color 0.2s',
+                        }}>
+                          <CheckCircle2 size={11} color={ok ? '#16a34a' : '#d1d5db'} />
+                        </div>
+                        <span style={{ fontSize: '11.5px', color: ok ? '#15803d' : '#9ca3af', fontWeight: ok ? 500 : 400 }}>
                           {p.label}
                         </span>
                       </div>
@@ -167,48 +307,72 @@ export default function ResetPasswordPage() {
 
               {/* Confirm password */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Xác nhận mật khẩu mới <span className="text-red-500">*</span>
+                <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, color: '#374151', marginBottom: '8px' }}>
+                  Xác nhận mật khẩu mới <span style={{ color: '#ef4444' }}>*</span>
                 </label>
-                <div className="relative">
+                <div style={{ position: 'relative' }}>
                   <input
                     {...register('confirmPassword')}
                     type={showCon ? 'text' : 'password'}
-                    placeholder="••••••••"
-                    className={`w-full border rounded-lg px-3 py-2.5 pr-10 text-sm outline-none focus:ring-2 focus:ring-blue-500 ${
-                      errors.confirmPassword ? 'border-red-300' : 'border-gray-200'
-                    }`}
+                    placeholder="Nhập lại mật khẩu mới"
+                    style={{
+                      width: '100%', padding: '11px 42px 11px 14px',
+                      border: `1.5px solid ${errors.confirmPassword ? '#fca5a5' : '#e5e7eb'}`,
+                      borderRadius: '10px', fontSize: '14px', outline: 'none',
+                      boxSizing: 'border-box', color: '#111827',
+                      transition: 'border-color 0.15s',
+                    }}
+                    onFocus={e => { e.currentTarget.style.borderColor = '#3b82f6' }}
+                    onBlur={e => { e.currentTarget.style.borderColor = errors.confirmPassword ? '#fca5a5' : '#e5e7eb' }}
                   />
-                  <button
-                    type="button"
-                    onClick={() => setShowCon(v => !v)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400"
-                  >
-                    {showCon ? <EyeOff size={16} /> : <Eye size={16} />}
+                  <button type="button" onClick={() => setShowCon(v => !v)}
+                    style={{ position: 'absolute', right: '13px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', padding: 0, color: '#9ca3af' }}>
+                    {showCon ? <EyeOff size={17} /> : <Eye size={17} />}
                   </button>
                 </div>
                 {errors.confirmPassword && (
-                  <p className="text-red-500 text-xs mt-1">{errors.confirmPassword.message}</p>
+                  <p style={{ fontSize: '12px', color: '#ef4444', marginTop: '6px', display: 'flex', alignItems: 'center', gap: '4px' } as React.CSSProperties}>
+                    ⚠ {errors.confirmPassword.message}
+                  </p>
                 )}
               </div>
 
-              <button
-                type="submit"
-                disabled={loading}
-                className="w-full bg-blue-600 hover:bg-blue-700 disabled:opacity-60 text-white font-medium py-2.5 rounded-lg text-sm flex items-center justify-center gap-2 mt-2"
+              {/* Submit */}
+              <button type="submit" disabled={loading}
+                style={{
+                  width: '100%', padding: '12px',
+                  backgroundColor: loading ? '#93c5fd' : '#2563eb',
+                  color: 'white', border: 'none', borderRadius: '10px',
+                  fontSize: '14px', fontWeight: 700, cursor: loading ? 'not-allowed' : 'pointer',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
+                  marginTop: '4px', transition: 'background-color 0.15s',
+                }}
+                onMouseEnter={e => { if (!loading) (e.currentTarget as HTMLElement).style.backgroundColor = '#1d4ed8' }}
+                onMouseLeave={e => { if (!loading) (e.currentTarget as HTMLElement).style.backgroundColor = '#2563eb' }}
               >
-                {loading && <Loader2 size={16} className="animate-spin" />}
-                Xác nhận đặt lại mật khẩu
+                {loading ? <Loader2 size={17} style={{ animation: 'spin 1s linear infinite' }} /> : <ShieldCheck size={17} />}
+                {loading ? 'Đang xử lý...' : 'Xác nhận đặt lại mật khẩu'}
               </button>
-            </form>
 
-            <div className="text-center mt-5">
-              <Link to="/login" className="text-sm text-gray-500 hover:text-gray-700">
-                Quay lại đăng nhập
-              </Link>
             </div>
-          </>
-        )}
+          </form>
+
+          {/* Back to login */}
+          <div style={{ marginTop: '28px', textAlign: 'center' }}>
+            <Link to="/login" style={{
+              display: 'inline-flex', alignItems: 'center', gap: '6px',
+              fontSize: '13px', color: '#6b7280', textDecoration: 'none',
+              transition: 'color 0.15s',
+            }}
+              onMouseEnter={e => { (e.currentTarget as HTMLElement).style.color = '#374151' }}
+              onMouseLeave={e => { (e.currentTarget as HTMLElement).style.color = '#6b7280' }}
+            >
+              <ArrowLeft size={14} />
+              Quay lại đăng nhập
+            </Link>
+          </div>
+
+        </div>
       </div>
     </div>
   )

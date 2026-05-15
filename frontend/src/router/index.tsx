@@ -9,6 +9,7 @@ import ResetPasswordPage from '../pages/auth/ResetPasswordPage'
 import DashboardPage from '../pages/dashboard/DashboardPage'
 import UsersPage from '../pages/users/UsersPage'
 import StaffPortalPage from '../pages/staff/StaffPortalPage'
+import LogsPage from '../pages/logs/LogsPage'
 
 // Đã đăng nhập mới vào được
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
@@ -57,6 +58,7 @@ export default function AppRouter() {
           <Route path="/users"           element={<UsersPage />} />
           <Route path="/users/:role"     element={<UsersPage />} />
           <Route path="/change-password" element={<ChangePasswordPage />} />
+          <Route path="/logs"            element={<LogsPage />} />
         </Route>
 
         {/* Fallback */}
