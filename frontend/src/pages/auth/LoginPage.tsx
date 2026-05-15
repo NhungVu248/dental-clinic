@@ -51,6 +51,11 @@ export default function LoginPage() {
 
   const { register, handleSubmit } = useForm<{ username: string; password: string }>()
 
+  const navigateByRole = (role: string) => {
+    if (role === 'ADMIN') navigate('/dashboard')
+    else navigate('/staff-portal')
+  }
+
   const onSubmit = async (data: any) => {
     setLoading(true)
     setError('')
@@ -58,15 +63,17 @@ export default function LoginPage() {
       const res = await authApi.login(data)
       const { token, user } = res.data
 
-      if (user.roles.includes('ADMIN')) {
-        setAuth(token, user)
-        setActiveRole('ADMIN')
-        navigate('/dashboard')
-      } else if (user.roles.length === 1) {
+      if (user.roles.length === 1) {
         setAuth(token, user)
         setActiveRole(user.roles[0])
-        navigate('/dashboard')
+        navigateByRole(user.roles[0])
+      } else if (user.roles.includes(selectedRole)) {
+        // Đã chọn vai trò trước khi đăng nhập và tài khoản có vai trò đó
+        setAuth(token, user)
+        setActiveRole(selectedRole)
+        navigateByRole(selectedRole)
       } else {
+        // Có nhiều vai trò, chưa khớp với lựa chọn → hiện màn hình chọn lại
         setPendingLogin({ token, user })
       }
     } catch (err: any) {
@@ -80,7 +87,7 @@ export default function LoginPage() {
     if (!pendingLogin) return
     setAuth(pendingLogin.token, pendingLogin.user)
     setActiveRole(role)
-    navigate('/dashboard')
+    navigateByRole(role)
   }
 
   if (pendingLogin) return <RoleSelector roles={pendingLogin.user.roles} onSelect={handleRoleSelect} />

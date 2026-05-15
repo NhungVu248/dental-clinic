@@ -131,11 +131,12 @@ export default function Sidebar({ collapsed, onToggle }: Props) {
                     {!collapsed && openMenus.includes(item.label) && (
                       <div style={{ marginLeft: '36px', marginTop: '2px', marginBottom: '4px' }}>
                         {(item as any).children.map((child: any) => (
-                          <NavLink key={child.path} to={child.path} style={({ isActive }) => ({
+                          <NavLink key={child.path} to={child.path} end style={({ isActive }) => ({
                             display: 'block', padding: '7px 10px', borderRadius: '6px',
                             fontSize: '12px', textDecoration: 'none', marginBottom: '1px',
                             color: isActive ? 'white' : 'rgba(255,255,255,0.55)',
                             backgroundColor: isActive ? 'rgba(255,255,255,0.12)' : 'transparent',
+                            fontWeight: isActive ? 600 : 400,
                           })}>
                             {child.label}
                           </NavLink>

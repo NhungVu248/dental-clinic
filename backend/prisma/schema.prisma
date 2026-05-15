@@ -6,28 +6,39 @@ datasource db {
   provider = "mysql"
   url      = env("DATABASE_URL")
 }
+
+// ─── AUTH ───────────────────────────────────────────────────
+
 model Role {
-  id        Int      @id @default(autoincrement())
-  name      String   @unique // ADMIN, DOCTOR, RECEPTIONIST, ACCOUNTANT
-  users     UserRole[]
+  id    Int        @id @default(autoincrement())
+  name  String     @unique
+  users UserRole[]
 }
 
 model User {
-  id           Int       @id @default(autoincrement())
-  fullName     String
-  username     String    @unique
-  email        String    @unique
-  password     String
-  isActive     Boolean   @default(true)
+  id            Int      @id @default(autoincrement())
+  fullName      String
+  username      String   @unique
+  email         String   @unique
+  password      String
+  isActive      Boolean  @default(true)
+  lockReason    String?
   loginAttempts Int      @default(0)
-  lockedUntil  DateTime?
-  createdAt    DateTime  @default(now())
-  updatedAt    DateTime  @updatedAt
+  lockedUntil   DateTime?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
 
-  roles        UserRole[]
+  roles         UserRole[]
   refreshTokens RefreshToken[]
-  resetTokens  PasswordResetToken[]
-  logs         SystemLog[]
+  resetTokens   PasswordResetToken[]
+  logs          SystemLog[]
+  certificates  UserCertificate[]
+
+  // Profile theo vai trò
+  adminProfile       AdminProfile?
+  receptionistProfile ReceptionistProfile?
+  accountantProfile  AccountantProfile?
+  doctorProfile      DoctorProfile?
 }
 
 model UserRole {
@@ -67,4 +78,214 @@ model SystemLog {
   detail    String?  @db.Text
   ip        String?
   createdAt DateTime @default(now())
+}
+
+// ─── USER CERTIFICATES ──────────────────────────────────────
+
+model UserCertificate {
+  id           Int      @id @default(autoincrement())
+  userId       Int
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  filename     String   // stored filename on disk (uuid-based)
+  originalName String   // original file name from upload
+  mimetype     String
+  size         Int
+  uploadedAt   DateTime @default(now())
+}
+
+// ─── ADMIN PROFILE ──────────────────────────────────────────
+
+model AdminProfile {
+  id     Int  @id @default(autoincrement())
+  userId Int  @unique
+  user   User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Định danh
+  phone       String?
+  gender      String?
+  dateOfBirth DateTime?
+  address     String?  @db.Text
+  avatar      String?
+
+  // Hành chính
+  nationalId  String?
+  issueDate   DateTime?
+  issuePlace  String?
+  hometown    String?
+  maritalStatus             String?
+  emergencyContactName      String?
+  emergencyContactPhone     String?
+  notes       String?  @db.Text
+
+  // Chuyên môn quản trị
+  specialization   String?
+  degree           String?
+  educationLevel   String?
+  graduatedSchool  String?
+  graduationYear   Int?
+  certificateNumber     String?
+  certificateIssueDate  DateTime?
+  certificateExpiryDate DateTime?
+  yearsOfExperience     Int?
+  professionalSkills    Json?
+  systemPermissions     Json?
+  languages             Json?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// ─── RECEPTIONIST PROFILE ───────────────────────────────────
+
+model ReceptionistProfile {
+  id     Int  @id @default(autoincrement())
+  userId Int  @unique
+  user   User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Định danh
+  phone       String?
+  gender      String?
+  dateOfBirth DateTime?
+  address     String?  @db.Text
+  avatar      String?
+
+  // Hành chính
+  nationalId  String?
+  issueDate   DateTime?
+  issuePlace  String?
+  hometown    String?
+  maritalStatus             String?
+  emergencyContactName      String?
+  emergencyContactPhone     String?
+  notes       String?  @db.Text
+
+  // Chuyên môn lễ tân
+  educationLevel       String?
+  graduatedSchool      String?
+  graduationYear       Int?
+  yearsOfExperience    Int?
+  professionalSkills   Json?
+  languages            Json?
+  computerSkills       Json?
+  customerServiceLevel String?  // basic | good | advanced
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// ─── ACCOUNTANT PROFILE ─────────────────────────────────────
+
+model AccountantProfile {
+  id     Int  @id @default(autoincrement())
+  userId Int  @unique
+  user   User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Định danh
+  phone       String?
+  gender      String?
+  dateOfBirth DateTime?
+  address     String?  @db.Text
+  avatar      String?
+
+  // Hành chính
+  nationalId  String?
+  issueDate   DateTime?
+  issuePlace  String?
+  hometown    String?
+  maritalStatus             String?
+  emergencyContactName      String?
+  emergencyContactPhone     String?
+  notes       String?  @db.Text
+
+  // Chuyên môn kế toán
+  specialization        String?   // kế toán tổng hợp, kế toán thuế...
+  degree                String?
+  educationLevel        String?
+  graduatedSchool       String?
+  graduationYear        Int?
+  certificateNumber     String?
+  certificateIssueDate  DateTime?
+  certificateExpiryDate DateTime?
+  yearsOfExperience     Int?
+  professionalSkills    Json?
+  softwareSkills        Json?     // phần mềm kế toán
+  languages             Json?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// ─── DOCTOR PROFILE ─────────────────────────────────────────
+
+model DoctorProfile {
+  id     Int  @id @default(autoincrement())
+  userId Int  @unique
+  user   User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Định danh
+  phone       String?
+  gender      String?
+  dateOfBirth DateTime?
+  address     String?  @db.Text
+  avatar      String?
+
+  // Hành chính
+  nationalId  String?
+  issueDate   DateTime?
+  issuePlace  String?
+  hometown    String?
+  maritalStatus             String?
+  emergencyContactName      String?
+  emergencyContactPhone     String?
+  notes       String?  @db.Text
+
+  // Chuyên môn bác sĩ
+  specialization     String?
+  degree             String?
+  educationLevel     String?
+  graduatedSchool    String?
+  graduationYear     Int?
+  licenseNumber      String?  @unique
+  licenseIssueDate   DateTime?
+  licenseExpiryDate  DateTime?
+  yearsOfExperience  Int?
+  professionalSkills Json?
+  servicesCanPerform Json?
+  languages          Json?
+
+  // Công việc
+  employmentStatus  String?   // working | on_leave | resigned | inactive
+  position          String?
+  workType          String?   // full_time | part_time | collaborator
+  startDate         DateTime?
+  endDate           DateTime?
+  contractNumber    String?
+
+  // Lịch làm việc
+  scheduleType            String?   // fixed | rotating | custom
+  workingDays             Json?
+  shiftStart              String?
+  shiftEnd                String?
+  maxAppointmentsPerDay   Int?
+  appointmentDuration     Int?
+  isAvailableOnline       Boolean   @default(false)
+
+  // Tài chính
+  baseSalary        Decimal?  @db.Decimal(12, 2)
+  salaryType        String?   // monthly | per_shift | percentage
+  commissionRate    Decimal?  @db.Decimal(5, 2)
+  bankAccountName   String?
+  bankName          String?
+  bankAccountNumber String?
+  taxCode           String?
+  insuranceNumber   String? 
+
+  // Hồ sơ đính kèm
+  qualificationFiles Json?
+  licenseFiles       Json?
+  identityFiles      Json?
+  contractFiles      Json?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }

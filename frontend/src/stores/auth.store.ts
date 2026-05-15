@@ -1,4 +1,5 @@
 import { create } from 'zustand'
+import { authApi } from '../api/auth.api'
 
 interface User {
   id: number
@@ -34,6 +35,7 @@ export const useAuthStore = create<AuthState>((set) => ({
   },
 
   logout: () => {
+    authApi.logout().catch(() => {})
     localStorage.removeItem('token')
     localStorage.removeItem('user')
     localStorage.removeItem('activeRole')

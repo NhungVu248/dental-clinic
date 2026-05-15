@@ -4,12 +4,26 @@ export const api = axios.create({
   baseURL: 'http://localhost:5000/api',
 })
 
-// Tự động gắn token vào header
+// Gắn token vào mọi request
 api.interceptors.request.use((config) => {
   const token = localStorage.getItem('token')
   if (token) config.headers.Authorization = `Bearer ${token}`
   return config
 })
+
+// Tự động logout khi token hết hạn (401) hoặc không có quyền (403 toàn cục)
+api.interceptors.response.use(
+  res => res,
+  err => {
+    if (err.response?.status === 401) {
+      localStorage.removeItem('token')
+      localStorage.removeItem('user')
+      localStorage.removeItem('activeRole')
+      window.location.href = '/login'
+    }
+    return Promise.reject(err)
+  }
+)
 
 // Auth APIs
 export const authApi = {
@@ -20,7 +34,35 @@ export const authApi = {
   changePassword: (data: any) => api.post('/auth/change-password', data),
   forgotPassword: (data: any) => api.post('/auth/forgot-password', data),
   resetPassword:  (data: any) => api.post('/auth/reset-password', data),
-  getUsers:       () => api.get('/auth/users'),
-  toggleStatus:   (id: number, isActive: boolean) => api.patch(`/auth/users/${id}/status`, { isActive }),
-  deleteUser:     (id: number) => api.delete(`/auth/users/${id}`),
+  logout:         () => api.post('/auth/logout'),
+  getStats:        () => api.get('/auth/stats'),
+  getUsers:        () => api.get('/auth/users'),
+  createStaff:     (data: { fullName: string; username: string; email: string; password: string; roles: string[] }) =>
+                     api.post('/auth/users', data),
+  getUserById:     (id: number) => api.get(`/auth/users/${id}`),
+  updateUserRoles: (id: number, roles: string[]) => api.put(`/auth/users/${id}/roles`, { roles }),
+  updateProfile:   (id: number, data: { fullName?: string; email?: string; phone?: string; address?: string; avatar?: string }) =>
+                     api.put(`/auth/users/${id}/profile`, data),
+  adminResetPassword: (id: number, newPassword: string) =>
+                     api.post(`/auth/users/${id}/reset-password`, { newPassword }),
+  sendEmail:       (id: number, subject: string, content: string, files: File[]) => {
+                     const form = new FormData()
+                     form.append('subject', subject)
+                     form.append('content', content)
+                     files.forEach(f => form.append('files', f))
+                     return api.post(`/auth/users/${id}/send-email`, form)
+                   },
+  toggleStatus:    (id: number, isActive: boolean, reason?: string) =>
+                     api.patch(`/auth/users/${id}/status`, { isActive, reason }),
+
+  deleteUser:      (id: number) => api.delete(`/auth/users/${id}`),
+
+  // Bằng cấp & Chứng chỉ
+  getCertificates:    (id: number) => api.get(`/auth/users/${id}/certificates`),
+  uploadCertificate:  (id: number, file: File) => {
+                        const form = new FormData()
+                        form.append('file', file)
+                        return api.post(`/auth/users/${id}/certificates`, form)
+                      },
+  deleteCertificate:  (id: number, certId: number) => api.delete(`/auth/users/${id}/certificates/${certId}`),
 }

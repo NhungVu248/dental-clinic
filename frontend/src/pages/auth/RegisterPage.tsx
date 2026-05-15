@@ -70,7 +70,7 @@ export default function RegisterPage() {
             <HeartPulse size={20} />
           </div>
           <div>
-            <p style={{ fontWeight: 700, fontSize: '15px' }}>Nha Khoa Smile</p>
+            <p style={{ fontWeight: 700, fontSize: '15px' }}>DentCare Pro</p>
             <p style={{ fontSize: '12px', color: 'rgba(255,255,255,0.6)' }}>Hệ thống Quản lý Phòng khám</p>
           </div>
         </div>
@@ -105,7 +105,7 @@ export default function RegisterPage() {
           </div>
         </div>
 
-        <p style={{ fontSize: '12px', color: 'rgba(255,255,255,0.4)' }}>© 2025 Nha Khoa Smile</p>
+        <p style={{ fontSize: '12px', color: 'rgba(255,255,255,0.4)' }}>© 2025 DentCare Pro</p>
       </div>
 
       {/* Right — Form */}

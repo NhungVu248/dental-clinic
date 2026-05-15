@@ -2,9 +2,22 @@ import { PrismaClient } from '@prisma/client'
 import { hashPassword, comparePassword } from '../../utils/hash'
 import { signToken } from '../../utils/jwt'
 import { logAction } from '../../utils/logger'
+import {
+  sendWelcomeEmail,
+  sendAdminPasswordResetEmail,
+  sendCustomEmail,
+  EmailAttachment,
+} from '../../utils/email'
 import crypto from 'crypto'
+import fs from 'fs'
+import path from 'path'
 
 const prisma = new PrismaClient()
+
+// ─── Logout: xóa refresh token ───────────────────────────────
+export const logoutUser = async (userId: number) => {
+  await prisma.refreshToken.deleteMany({ where: { userId } })
+}
 
 // ─── UC01: Kiểm tra đã có Admin chưa ───────────────────────
 export const checkAdminExists = async () => {
@@ -208,24 +221,241 @@ export const getUsers = async () => {
   })
 }
 
-// ─── Khóa / Mở tài khoản ────────────────────────────────────
+// ─── UC05 D: Khóa / Mở tài khoản ───────────────────────────
 export const toggleUserStatus = async (
   targetId: number,
   isActive: boolean,
+  reason: string | undefined,
+  operatorId: number,
+  ip: string
+) => {
+  const user = await prisma.user.findUnique({
+    where: { id: targetId },
+    include: { roles: { include: { role: true } } },
+  })
+  if (!user) throw new Error('USER_NOT_FOUND')
+  if (targetId === operatorId) throw new Error('CANNOT_SELF_LOCK')
+
+  // A7: không khóa nếu là Admin hoạt động duy nhất
+  if (!isActive) {
+    const isAdmin = user.roles.some(ur => ur.role.name === 'ADMIN')
+    if (isAdmin) {
+      const activeAdminCount = await prisma.user.count({
+        where: { isActive: true, roles: { some: { role: { name: 'ADMIN' } } } },
+      })
+      if (activeAdminCount <= 1) throw new Error('LAST_ADMIN')
+    }
+    // Hủy tất cả phiên làm việc ngay lập tức
+    await prisma.refreshToken.deleteMany({ where: { userId: targetId } })
+  }
+
+  await prisma.user.update({
+    where: { id: targetId },
+    data: { isActive, lockReason: isActive ? null : (reason ?? null) },
+  })
+  await logAction(
+    isActive ? 'UNLOCK_USER' : 'LOCK_USER',
+    `${isActive ? 'Mở' : 'Khóa'} tài khoản: ${user.username}${reason ? ` — ${reason}` : ''}`,
+    operatorId, ip
+  )
+}
+
+// ─── UC05 A: Tạo tài khoản (mọi vai trò, kể cả ADMIN) ───────
+const ALL_VALID_ROLES = ['ADMIN', 'DOCTOR', 'RECEPTIONIST', 'ACCOUNTANT']
+
+export const createStaff = async (
+  data: { fullName: string; username: string; email: string; password: string; roles: string[] },
+  operatorId: number,
+  ip: string
+) => {
+  if (data.roles.length === 0) throw new Error('NO_ROLE')
+  if (!data.roles.every(r => ALL_VALID_ROLES.includes(r))) throw new Error('INVALID_ROLE')
+
+  const hashedPw = await hashPassword(data.password)
+  const roleRecords = await prisma.role.findMany({ where: { name: { in: data.roles } } })
+
+  const user = await prisma.user.create({
+    data: {
+      fullName: data.fullName,
+      username: data.username,
+      email: data.email,
+      password: hashedPw,
+      roles: { create: roleRecords.map(r => ({ roleId: r.id })) },
+    },
+  })
+
+  // Tạo profile trống cho từng role
+  if (data.roles.includes('ADMIN'))
+    await prisma.adminProfile.create({ data: { userId: user.id } })
+  if (data.roles.includes('DOCTOR'))
+    await prisma.doctorProfile.create({ data: { userId: user.id } })
+  if (data.roles.includes('RECEPTIONIST'))
+    await prisma.receptionistProfile.create({ data: { userId: user.id } })
+  if (data.roles.includes('ACCOUNTANT'))
+    await prisma.accountantProfile.create({ data: { userId: user.id } })
+
+  try {
+    await sendWelcomeEmail(data.email, data.fullName, data.username, data.password)
+  } catch {
+    // E2: tài khoản vẫn tạo dù gửi mail thất bại
+  }
+
+  await logAction('CREATE_STAFF', `Tạo tài khoản: ${data.username} [${data.roles.join(', ')}]`, operatorId, ip)
+  return user
+}
+
+// ─── UC05 C: Cập nhật vai trò (áp dụng cho mọi tài khoản) ───
+export const updateUserRoles = async (
+  targetId: number,
+  roles: string[],
+  operatorId: number,
+  ip: string
+) => {
+  if (roles.length === 0) throw new Error('NO_ROLE')
+  if (!roles.every(r => ALL_VALID_ROLES.includes(r))) throw new Error('INVALID_ROLE')
+
+  const user = await prisma.user.findUnique({
+    where: { id: targetId },
+    include: { roles: { include: { role: true } } },
+  })
+  if (!user) throw new Error('USER_NOT_FOUND')
+
+  // Nếu đang bỏ vai trò ADMIN: kiểm tra còn ít nhất 1 Admin hoạt động khác
+  const currentlyAdmin = user.roles.some(ur => ur.role.name === 'ADMIN')
+  const willStillAdmin = roles.includes('ADMIN')
+  if (currentlyAdmin && !willStillAdmin) {
+    const activeAdminCount = await prisma.user.count({
+      where: { isActive: true, roles: { some: { role: { name: 'ADMIN' } } } },
+    })
+    if (activeAdminCount <= 1) throw new Error('LAST_ADMIN')
+  }
+
+  const roleRecords = await prisma.role.findMany({ where: { name: { in: roles } } })
+  await prisma.userRole.deleteMany({ where: { userId: targetId } })
+  await prisma.userRole.createMany({
+    data: roleRecords.map(r => ({ userId: targetId, roleId: r.id })),
+  })
+
+  await logAction('UPDATE_ROLES', `Đổi vai trò ${user.username}: ${roles.join(', ')}`, operatorId, ip)
+}
+
+// ─── Dashboard stats ─────────────────────────────────────────
+export const getDashboardStats = async () => {
+  const allUsers = await prisma.user.findMany({
+    include: { roles: { include: { role: true } } }
+  })
+
+  const roleCounts: Record<string, number> = { ADMIN: 0, DOCTOR: 0, RECEPTIONIST: 0, ACCOUNTANT: 0 }
+  for (const u of allUsers) {
+    for (const ur of u.roles) {
+      const rn = ur.role.name
+      if (rn in roleCounts) roleCounts[rn]++
+    }
+  }
+
+  const startOfDay = new Date(); startOfDay.setHours(0, 0, 0, 0)
+  const todayLogs = await prisma.systemLog.count({ where: { createdAt: { gte: startOfDay } } })
+
+  return {
+    totalUsers: allUsers.length,
+    byRole: roleCounts,
+    todayLogs,
+  }
+}
+
+// ─── UC06: Lấy thông tin chi tiết user ───────────────────────
+export const getUserById = async (id: number) => {
+  return prisma.user.findUnique({
+    where: { id },
+    include: {
+      roles: { include: { role: true } },
+      adminProfile: true,
+      receptionistProfile: true,
+      accountantProfile: true,
+      doctorProfile: true,
+    },
+  })
+}
+
+// ─── UC06 A: Cập nhật thông tin cá nhân ──────────────────────
+export const updateUserProfile = async (
+  targetId: number,
+  data: { fullName?: string; email?: string; phone?: string; address?: string; avatar?: string },
+  operatorId: number,
+  ip: string
+) => {
+  const user = await prisma.user.findUnique({
+    where: { id: targetId },
+    include: { roles: { include: { role: true } } },
+  })
+  if (!user) throw new Error('USER_NOT_FOUND')
+
+  if (data.fullName || data.email) {
+    await prisma.user.update({
+      where: { id: targetId },
+      data: { ...(data.fullName && { fullName: data.fullName }), ...(data.email && { email: data.email }) },
+    })
+  }
+
+  const profileData = {
+    ...(data.phone   !== undefined && { phone: data.phone }),
+    ...(data.address !== undefined && { address: data.address }),
+    ...(data.avatar  !== undefined && { avatar: data.avatar }),
+  }
+
+  const roles = user.roles.map(ur => ur.role.name)
+  if (roles.includes('ADMIN'))
+    await prisma.adminProfile.upsert({ where: { userId: targetId }, update: profileData, create: { userId: targetId, ...profileData } })
+  if (roles.includes('DOCTOR'))
+    await prisma.doctorProfile.upsert({ where: { userId: targetId }, update: profileData, create: { userId: targetId, ...profileData } })
+  if (roles.includes('RECEPTIONIST'))
+    await prisma.receptionistProfile.upsert({ where: { userId: targetId }, update: profileData, create: { userId: targetId, ...profileData } })
+  if (roles.includes('ACCOUNTANT'))
+    await prisma.accountantProfile.upsert({ where: { userId: targetId }, update: profileData, create: { userId: targetId, ...profileData } })
+
+  await logAction('UPDATE_PROFILE', `Cập nhật thông tin: ${user.username}`, operatorId, ip)
+}
+
+// ─── UC06 B: Admin đặt lại mật khẩu cho nhân sự ─────────────
+export const adminResetPassword = async (
+  targetId: number,
+  newPassword: string,
   operatorId: number,
   ip: string
 ) => {
   const user = await prisma.user.findUnique({ where: { id: targetId } })
   if (!user) throw new Error('USER_NOT_FOUND')
-  if (targetId === operatorId) throw new Error('CANNOT_SELF_LOCK')
+  if (targetId === operatorId) throw new Error('CANNOT_SELF_RESET')
 
-  await prisma.user.update({ where: { id: targetId }, data: { isActive } })
-  await logAction(
-    isActive ? 'UNLOCK_USER' : 'LOCK_USER',
-    `${isActive ? 'Mở' : 'Khóa'} tài khoản: ${user.username}`,
-    operatorId, ip
-  )
+  const hashed = await hashPassword(newPassword)
+  await prisma.user.update({ where: { id: targetId }, data: { password: hashed } })
+  await prisma.refreshToken.deleteMany({ where: { userId: targetId } })
+
+  try {
+    await sendAdminPasswordResetEmail(user.email, user.fullName, newPassword)
+  } catch {
+    // E2: mật khẩu vẫn được cập nhật dù gửi mail thất bại
+  }
+
+  await logAction('ADMIN_RESET_PASSWORD', `Đặt lại mật khẩu: ${user.username}`, operatorId, ip)
 }
+
+// ─── UC06: Gửi email tùy chỉnh đến nhân sự ───────────────────
+export const sendEmailToUser = async (
+  targetId: number,
+  subject: string,
+  content: string,
+  attachments: EmailAttachment[],
+  operatorId: number,
+  ip: string
+) => {
+  const user = await prisma.user.findUnique({ where: { id: targetId } })
+  if (!user) throw new Error('USER_NOT_FOUND')
+
+  await sendCustomEmail(user.email, subject, content, attachments)
+  await logAction('SEND_EMAIL', `Gửi email đến: ${user.username} — "${subject}" (${attachments.length} file đính kèm)`, operatorId, ip)
+}
+
 
 // ─── Xóa tài khoản (chỉ khi chưa có log) ───────────────────
 export const deleteUser = async (
@@ -243,4 +473,65 @@ export const deleteUser = async (
 
   await prisma.user.delete({ where: { id: targetId } })
   await logAction('DELETE_USER', `Xóa tài khoản: ${user.username}`, operatorId, ip)
+}
+
+// ─── Bằng cấp & Chứng chỉ ────────────────────────────────────
+
+const certDir = (userId: number) =>
+  path.join(process.cwd(), 'uploads', 'certificates', String(userId))
+
+export const uploadCertificate = async (
+  targetId: number,
+  file: { originalname: string; mimetype: string; size: number; buffer: Buffer },
+  operatorId: number,
+  ip: string
+) => {
+  const user = await prisma.user.findUnique({ where: { id: targetId } })
+  if (!user) throw new Error('USER_NOT_FOUND')
+
+  const ext = path.extname(file.originalname) || ''
+  const filename = `${crypto.randomUUID()}${ext}`
+  const dir = certDir(targetId)
+  fs.mkdirSync(dir, { recursive: true })
+  fs.writeFileSync(path.join(dir, filename), file.buffer)
+
+  const cert = await prisma.userCertificate.create({
+    data: {
+      userId: targetId,
+      filename,
+      originalName: file.originalname,
+      mimetype: file.mimetype,
+      size: file.size,
+    },
+  })
+
+  await logAction('UPLOAD_CERTIFICATE', `Tải lên chứng chỉ: ${file.originalname} (user ${user.username})`, operatorId, ip)
+  return cert
+}
+
+export const getCertificates = async (targetId: number) => {
+  const user = await prisma.user.findUnique({ where: { id: targetId } })
+  if (!user) throw new Error('USER_NOT_FOUND')
+  return prisma.userCertificate.findMany({
+    where: { userId: targetId },
+    orderBy: { uploadedAt: 'desc' },
+  })
+}
+
+export const deleteCertificate = async (
+  targetId: number,
+  certId: number,
+  operatorId: number,
+  ip: string
+) => {
+  const cert = await prisma.userCertificate.findFirst({
+    where: { id: certId, userId: targetId },
+  })
+  if (!cert) throw new Error('CERT_NOT_FOUND')
+
+  const filePath = path.join(certDir(targetId), cert.filename)
+  if (fs.existsSync(filePath)) fs.unlinkSync(filePath)
+
+  await prisma.userCertificate.delete({ where: { id: certId } })
+  await logAction('DELETE_CERTIFICATE', `Xóa chứng chỉ: ${cert.originalName} (userId ${targetId})`, operatorId, ip)
 }

@@ -4,12 +4,16 @@ import Sidebar from './Sidebar'
 import Header from './Header'
 
 const pageTitles: Record<string, { title: string; subtitle?: string }> = {
-  '/dashboard': { title: 'Tổng quan hệ thống', subtitle: 'Thống kê nhanh và truy cập các chức năng quản lý hệ thống DentCare Pro.' },
-  '/users':     { title: 'Quản lý người dùng' },
-  '/services':  { title: 'Dịch vụ nha khoa' },
-  '/pricing':   { title: 'Bảng giá dịch vụ' },
-  '/logs':      { title: 'Nhật ký hệ thống' },
-  '/settings':  { title: 'Cài đặt hệ thống' },
+  '/dashboard':           { title: 'Tổng quan hệ thống', subtitle: 'Thống kê nhanh và truy cập các chức năng quản lý hệ thống DentCare Pro.' },
+  '/users':               { title: 'Quản lý người dùng', subtitle: 'Tạo, xem, cập nhật và quản lý vòng đời tài khoản nhân sự (UC05/UC06).' },
+  '/users/receptionist':  { title: 'Quản lý Lễ tân',     subtitle: 'Quản lý tài khoản và thông tin bộ phận Lễ tân (UC05/UC06).' },
+  '/users/doctor':        { title: 'Quản lý Bác sĩ',     subtitle: 'Quản lý tài khoản và thông tin bộ phận Bác sĩ (UC05/UC06).' },
+  '/users/accountant':    { title: 'Quản lý Kế toán',    subtitle: 'Quản lý tài khoản và thông tin bộ phận Kế toán (UC05/UC06).' },
+  '/users/admin':         { title: 'Quản lý Admin',       subtitle: 'Quản lý tài khoản và thông tin bộ phận Admin (UC05/UC06).' },
+  '/services':            { title: 'Dịch vụ nha khoa' },
+  '/pricing':             { title: 'Bảng giá dịch vụ' },
+  '/logs':                { title: 'Nhật ký hệ thống' },
+  '/settings':            { title: 'Cài đặt hệ thống' },
 }
 
 export default function MainLayout() {

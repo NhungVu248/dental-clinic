@@ -13,3 +13,11 @@ export const authenticate = (req: Request, res: Response, next: NextFunction) =>
     res.status(401).json({ message: 'Token không hợp lệ hoặc đã hết hạn' })
   }
 }
+
+export const requireRole = (...roles: string[]) =>
+  (req: Request, res: Response, next: NextFunction) => {
+    const userRoles: string[] = (req as any).user?.roles || []
+    if (!roles.some(r => userRoles.includes(r)))
+      return res.status(403).json({ message: 'Không có quyền truy cập' })
+    next()
+  }
