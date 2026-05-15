@@ -12,6 +12,8 @@ const pageTitles: Record<string, { title: string; subtitle?: string }> = {
   '/users/admin':         { title: 'Quản lý Admin',       subtitle: 'Quản lý tài khoản và thông tin bộ phận Admin (UC05/UC06).' },
   '/services':            { title: 'Dịch vụ nha khoa' },
   '/pricing':             { title: 'Bảng giá dịch vụ' },
+  '/services':            { title: 'Quản lý Dịch vụ Nha khoa', subtitle: 'Quản lý nhóm dịch vụ (UC08) và các dịch vụ (UC09) của phòng khám.' },
+  '/services/groups':     { title: 'Quản lý Dịch vụ Nha khoa', subtitle: 'Quản lý nhóm dịch vụ (UC08) và các dịch vụ (UC09) của phòng khám.' },
   '/logs':                { title: 'Nhật ký hoạt động hệ thống', subtitle: 'Giám sát và truy vết các hành động quan trọng (UC07). Chỉ Admin được xem.' },
   '/settings':            { title: 'Cài đặt hệ thống' },
 }

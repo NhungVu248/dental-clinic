@@ -10,6 +10,7 @@ import DashboardPage from '../pages/dashboard/DashboardPage'
 import UsersPage from '../pages/users/UsersPage'
 import StaffPortalPage from '../pages/staff/StaffPortalPage'
 import LogsPage from '../pages/logs/LogsPage'
+import ServicesPage from '../pages/services/ServicesPage'
 
 // Đã đăng nhập mới vào được
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
@@ -57,8 +58,10 @@ export default function AppRouter() {
           <Route path="/dashboard"       element={<DashboardPage />} />
           <Route path="/users"           element={<UsersPage />} />
           <Route path="/users/:role"     element={<UsersPage />} />
-          <Route path="/change-password" element={<ChangePasswordPage />} />
+          <Route path="/change-password"  element={<ChangePasswordPage />} />
           <Route path="/logs"            element={<LogsPage />} />
+          <Route path="/services"        element={<ServicesPage />} />
+          <Route path="/services/groups" element={<ServicesPage />} />
         </Route>
 
         {/* Fallback */}

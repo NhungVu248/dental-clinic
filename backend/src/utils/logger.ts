@@ -19,6 +19,9 @@ const ACTION_MODULE: Record<string, string> = {
   SEND_EMAIL:           'User',
   UPLOAD_CERTIFICATE:   'User',
   DELETE_CERTIFICATE:   'User',
+  CREATE_SERVICE_GROUP: 'Service',
+  UPDATE_SERVICE_GROUP: 'Service',
+  DELETE_SERVICE_GROUP: 'Service',
 }
 
 export const logAction = async (
