@@ -12,6 +12,7 @@ import StaffPortalPage from '../pages/staff/StaffPortalPage'
 import LogsPage from '../pages/logs/LogsPage'
 import ServicesPage from '../pages/services/ServicesPage'
 import PricePage from '../pages/pricing/PricePage'
+import ProfilePage from '../pages/profile/ProfilePage'
 
 // Đã đăng nhập mới vào được
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
@@ -64,6 +65,7 @@ export default function AppRouter() {
           <Route path="/services"        element={<ServicesPage />} />
           <Route path="/services/groups" element={<ServicesPage />} />
           <Route path="/pricing"         element={<PricePage />} />
+          <Route path="/profile"         element={<ProfilePage />} />
         </Route>
 
         {/* Fallback */}

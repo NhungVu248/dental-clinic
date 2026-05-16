@@ -5,6 +5,7 @@ import path from 'path'
 import authRoutes from './modules/auth/auth.routes'
 import serviceRoutes from './modules/service/service.routes'
 import priceRoutes from './modules/price/price.routes'
+import profileRoutes from './modules/profile/profile.routes'
 
 dotenv.config()
 
@@ -18,6 +19,7 @@ app.use('/uploads', express.static(path.join(process.cwd(), 'uploads')))
 app.use('/api/auth', authRoutes)
 app.use('/api/services', serviceRoutes)
 app.use('/api/prices', priceRoutes)
+app.use('/api/profile', profileRoutes)
 app.get('/health', (_, res) => res.json({ status: 'OK' }))
 
 app.listen(PORT, () => {

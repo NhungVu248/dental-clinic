@@ -135,6 +135,23 @@ model AdminProfile {
   systemPermissions     Json?
   languages             Json?
 
+  // Công việc
+  employmentStatus String?   // working | on_leave | resigned | inactive
+  position         String?
+  department       String?
+  branch           String?
+  workType         String?   // full_time | part_time | collaborator
+  startDate        DateTime?
+  endDate          DateTime?
+  contractNumber   String?
+  workingNote      String?   @db.Text
+
+  // Hồ sơ đính kèm
+  qualificationFiles Json?
+  identityFiles      Json?
+  contractFiles      Json?
+  profileDocuments   Json?
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
