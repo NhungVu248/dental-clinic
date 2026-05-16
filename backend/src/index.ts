@@ -4,6 +4,7 @@ import dotenv from 'dotenv'
 import path from 'path'
 import authRoutes from './modules/auth/auth.routes'
 import serviceRoutes from './modules/service/service.routes'
+import priceRoutes from './modules/price/price.routes'
 
 dotenv.config()
 
@@ -16,6 +17,7 @@ app.use(express.json())
 app.use('/uploads', express.static(path.join(process.cwd(), 'uploads')))
 app.use('/api/auth', authRoutes)
 app.use('/api/services', serviceRoutes)
+app.use('/api/prices', priceRoutes)
 app.get('/health', (_, res) => res.json({ status: 'OK' }))
 
 app.listen(PORT, () => {

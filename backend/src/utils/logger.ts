@@ -26,6 +26,8 @@ const ACTION_MODULE: Record<string, string> = {
   UPDATE_SERVICE:         'Service',
   CHANGE_SERVICE_STATUS:  'Service',
   DELETE_SERVICE:         'Service',
+  CREATE_PRICE:           'Price',
+  UPDATE_PRICE:           'Price',
 }
 
 export const logAction = async (
