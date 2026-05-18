@@ -238,6 +238,13 @@ export default function LoginPage() {
                 {loading && <Loader2 size={16} />}
                 Đăng nhập
               </button>
+
+              <p style={{ textAlign: 'center', fontSize: '13px', color: '#6b7280', marginTop: '4px' }}>
+                Chưa có tài khoản Admin?{' '}
+                <a href="/register" style={{ color: '#2563eb', textDecoration: 'none', fontWeight: 600 }}>
+                  Đăng ký ngay
+                </a>
+              </p>
             </div>
           </form>
         </div>

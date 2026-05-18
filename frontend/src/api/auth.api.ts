@@ -41,8 +41,13 @@ export const authApi = {
                      api.post('/auth/users', data),
   getUserById:     (id: number) => api.get(`/auth/users/${id}`),
   updateUserRoles: (id: number, roles: string[]) => api.put(`/auth/users/${id}/roles`, { roles }),
-  updateProfile:   (id: number, data: { fullName?: string; email?: string; phone?: string; address?: string; avatar?: string }) =>
+  updateProfile:   (id: number, data: Record<string, any>) =>
                      api.put(`/auth/users/${id}/profile`, data),
+  uploadAvatar:    (id: number, file: File) => {
+                     const form = new FormData()
+                     form.append('avatar', file)
+                     return api.post(`/auth/users/${id}/avatar`, form)
+                   },
   adminResetPassword: (id: number, newPassword: string) =>
                      api.post(`/auth/users/${id}/reset-password`, { newPassword }),
   sendEmail:       (id: number, subject: string, content: string, files: File[]) => {

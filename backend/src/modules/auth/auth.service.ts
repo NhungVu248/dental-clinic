@@ -349,9 +349,26 @@ export const updateUserRoles = async (
 
 // ─── Dashboard stats ─────────────────────────────────────────
 export const getDashboardStats = async () => {
-  const allUsers = await prisma.user.findMany({
-    include: { roles: { include: { role: true } } }
-  })
+  const now = new Date()
+  const startOfDay = new Date(); startOfDay.setHours(0, 0, 0, 0)
+
+  const [allUsers, activeServices, activePrices, todayLogs, lockedUsers, recentLogs] = await Promise.all([
+    prisma.user.findMany({ include: { roles: { include: { role: true } } } }),
+    prisma.service.count({ where: { status: 'ACTIVE' } }),
+    prisma.servicePrice.count({
+      where: {
+        startDate: { lte: now },
+        OR: [{ endDate: null }, { endDate: { gt: now } }],
+      },
+    }),
+    prisma.systemLog.count({ where: { createdAt: { gte: startOfDay } } }),
+    prisma.user.count({ where: { isActive: false } }),
+    prisma.systemLog.findMany({
+      take: 6,
+      orderBy: { createdAt: 'desc' },
+      include: { user: { select: { fullName: true, username: true } } },
+    }),
+  ])
 
   const roleCounts: Record<string, number> = { ADMIN: 0, DOCTOR: 0, RECEPTIONIST: 0, ACCOUNTANT: 0 }
   for (const u of allUsers) {
@@ -361,13 +378,14 @@ export const getDashboardStats = async () => {
     }
   }
 
-  const startOfDay = new Date(); startOfDay.setHours(0, 0, 0, 0)
-  const todayLogs = await prisma.systemLog.count({ where: { createdAt: { gte: startOfDay } } })
-
   return {
     totalUsers: allUsers.length,
     byRole: roleCounts,
+    activeServices,
+    activePrices,
     todayLogs,
+    lockedUsers,
+    recentLogs,
   }
 }
 

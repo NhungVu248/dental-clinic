@@ -2,6 +2,7 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { useAuthStore } from '../stores/auth.store'
 import MainLayout from '../layouts/MainLayout'
 import SetupPage from '../pages/auth/SetupPage'
+import RegisterPage from '../pages/auth/RegisterPage'
 import LoginPage from '../pages/auth/LoginPage'
 import ChangePasswordPage from '../pages/auth/ChangePasswordPage'
 import ForgotPasswordPage from '../pages/auth/ForgotPasswordPage'
@@ -42,6 +43,7 @@ export default function AppRouter() {
       <Routes>
         {/* Public */}
         <Route path="/setup"           element={<SetupPage />} />
+        <Route path="/register"        element={<RegisterPage />} />
         <Route path="/login"           element={<LoginPage />} />
         <Route path="/forgot-password" element={<ForgotPasswordPage />} />
         <Route path="/reset-password"  element={<ResetPasswordPage />} />
