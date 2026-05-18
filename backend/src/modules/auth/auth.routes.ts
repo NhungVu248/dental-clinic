@@ -17,6 +17,7 @@ const router = Router()
 // Public
 router.get('/check-setup',      ctrl.checkSetup)
 router.post('/setup',           ctrl.setupAdmin)
+router.post('/register',        ctrl.registerAdmin)
 router.post('/login',           ctrl.login)
 router.post('/forgot-password', ctrl.requestReset)
 router.post('/reset-password',  ctrl.resetPassword)
