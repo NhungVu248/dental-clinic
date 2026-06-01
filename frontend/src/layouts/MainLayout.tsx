@@ -17,6 +17,10 @@ const pageTitles: Record<string, { title: string; subtitle?: string }> = {
   '/logs':                { title: 'Nhật ký hoạt động hệ thống', subtitle: 'Giám sát và truy vết các hành động quan trọng (UC07). Chỉ Admin được xem.' },
   '/profile':             { title: 'Hồ sơ cá nhân', subtitle: 'Quản lý thông tin tài khoản và thiết lập cá nhân của bạn.' },
   '/settings':            { title: 'Cài đặt hệ thống' },
+  '/shifts':              { title: 'Cấu hình Ca làm việc', subtitle: 'Thiết lập các ca khám và khung giờ hoạt động của phòng khám (UC06).' },
+  '/schedules':           { title: 'Phân công Lịch trực Bác sĩ', subtitle: 'Lên lịch, phân công và quản lý lịch trực bác sĩ theo tuần (UC08).' },
+  '/holidays':            { title: 'Quản lý Ngày nghỉ lễ', subtitle: 'Cấu hình ngày nghỉ, lễ tết và các ngày không tiếp bệnh nhân (UC07).' },
+  '/sms':                 { title: 'Cấu hình Thông báo SMS', subtitle: 'Quản lý mẫu SMS, cài đặt gateway và lịch sử gửi thông báo tự động (UC10).' },
 }
 
 export default function MainLayout() {

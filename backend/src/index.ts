@@ -6,6 +6,10 @@ import authRoutes from './modules/auth/auth.routes'
 import serviceRoutes from './modules/service/service.routes'
 import priceRoutes from './modules/price/price.routes'
 import profileRoutes from './modules/profile/profile.routes'
+import shiftRoutes    from './modules/shift/shift.routes'
+import scheduleRoutes from './modules/schedule/schedule.routes'
+import holidayRoutes  from './modules/holiday/holiday.routes'
+import smsRoutes      from './modules/sms/sms.routes'
 
 dotenv.config()
 
@@ -20,6 +24,10 @@ app.use('/api/auth', authRoutes)
 app.use('/api/services', serviceRoutes)
 app.use('/api/prices', priceRoutes)
 app.use('/api/profile', profileRoutes)
+app.use('/api/shifts',    shiftRoutes)
+app.use('/api/schedules', scheduleRoutes)
+app.use('/api/holidays',  holidayRoutes)
+app.use('/api/sms',       smsRoutes)
 app.get('/health', (_, res) => res.json({ status: 'OK' }))
 
 app.listen(PORT, () => {

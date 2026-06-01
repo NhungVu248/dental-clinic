@@ -25,6 +25,7 @@ export interface Service {
   code: string
   name: string
   description: string | null
+  duration: number        // phút, 0 = chưa cấu hình
   status: string
   usageCount: number
   activatedAt: string | null
@@ -51,9 +52,9 @@ export const serviceApi = {
   getServices:     (params?: { search?: string; groupId?: number; status?: string }) =>
     api.get<Service[]>('/services', { params }),
   getServiceById:  (id: number) => api.get<Service>(`/services/${id}`),
-  createService:   (data: { code: string; name: string; serviceGroupId: number; description?: string }) =>
+  createService:   (data: { code: string; name: string; serviceGroupId: number; description?: string; duration?: number }) =>
     api.post('/services', data),
-  updateService:   (id: number, data: { code?: string; name?: string; serviceGroupId?: number; description?: string }) =>
+  updateService:   (id: number, data: { code?: string; name?: string; serviceGroupId?: number; description?: string; duration?: number }) =>
     api.put(`/services/${id}`, data),
   changeStatus:    (id: number, status: string) =>
     api.patch(`/services/${id}/status`, { status }),

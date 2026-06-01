@@ -14,6 +14,10 @@ import LogsPage from '../pages/logs/LogsPage'
 import ServicesPage from '../pages/services/ServicesPage'
 import PricePage from '../pages/pricing/PricePage'
 import ProfilePage from '../pages/profile/ProfilePage'
+import ShiftsPage from '../pages/shifts/ShiftsPage'
+import SchedulesPage from '../pages/schedules/SchedulesPage'
+import HolidaysPage from '../pages/holidays/HolidaysPage'
+import SmsPage from '../pages/sms/SmsPage'
 
 // Đã đăng nhập mới vào được
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
@@ -68,6 +72,10 @@ export default function AppRouter() {
           <Route path="/services/groups" element={<ServicesPage />} />
           <Route path="/pricing"         element={<PricePage />} />
           <Route path="/profile"         element={<ProfilePage />} />
+          <Route path="/shifts"          element={<ShiftsPage />} />
+          <Route path="/schedules"       element={<SchedulesPage />} />
+          <Route path="/holidays"        element={<HolidaysPage />} />
+          <Route path="/sms"             element={<SmsPage />} />
         </Route>
 
         {/* Fallback */}

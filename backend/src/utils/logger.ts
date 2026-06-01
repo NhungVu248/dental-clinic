@@ -28,6 +28,19 @@ const ACTION_MODULE: Record<string, string> = {
   DELETE_SERVICE:         'Service',
   CREATE_PRICE:           'Price',
   UPDATE_PRICE:           'Price',
+  CREATE_SHIFT:           'Shift',
+  UPDATE_SHIFT:           'Shift',
+  DELETE_SHIFT:           'Shift',
+  TOGGLE_SHIFT:           'Shift',
+  CREATE_SCHEDULE:        'Schedule',
+  UPDATE_SCHEDULE:        'Schedule',
+  DELETE_SCHEDULE:        'Schedule',
+  CREATE_HOLIDAY:         'Holiday',
+  UPDATE_HOLIDAY:         'Holiday',
+  DELETE_HOLIDAY:         'Holiday',
+  UPDATE_SMS_CONFIG:      'SMS',
+  UPDATE_SMS_TEMPLATE:    'SMS',
+  SEND_TEST_SMS:          'SMS',
 }
 
 export const logAction = async (

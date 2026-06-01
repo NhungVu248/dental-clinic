@@ -177,12 +177,14 @@ export const getServiceById = async (id: number) => {
 }
 
 export const createService = async (
-  data: { code: string; name: string; serviceGroupId: number; description?: string },
+  data: { code: string; name: string; serviceGroupId: number; description?: string; duration?: number },
   adminId: number,
   ip: string
 ) => {
   if (!data.code?.trim()) throw { status: 400, message: 'Mã dịch vụ không được để trống' }
   if (!data.name?.trim()) throw { status: 400, message: 'Tên dịch vụ không được để trống' }
+  if (data.duration !== undefined && (data.duration < 0 || !Number.isInteger(data.duration)))
+    throw { status: 400, message: 'Thời lượng dịch vụ không hợp lệ' }
 
   const dupCode = await prisma.service.findUnique({ where: { code: data.code.trim() } })
   if (dupCode) throw { status: 409, message: 'Mã dịch vụ đã tồn tại' }
@@ -192,21 +194,22 @@ export const createService = async (
 
   const service = await prisma.service.create({
     data: {
-      code: data.code.trim().toUpperCase(),
-      name: data.name.trim(),
-      description: data.description?.trim() || null,
+      code:          data.code.trim().toUpperCase(),
+      name:          data.name.trim(),
+      description:   data.description?.trim() || null,
+      duration:      data.duration ?? 0,
       serviceGroupId: data.serviceGroupId,
       status: 'INACTIVE',
     },
   })
 
-  await logAction('CREATE_SERVICE', `Tạo dịch vụ: ${service.code} – ${service.name}`, adminId, ip)
+  await logAction('CREATE_SERVICE', `Tạo dịch vụ: ${service.code} – ${service.name} (${service.duration > 0 ? service.duration + ' phút' : 'chưa cấu hình thời lượng'})`, adminId, ip)
   return service
 }
 
 export const updateService = async (
   id: number,
-  data: { code?: string; name?: string; serviceGroupId?: number; description?: string },
+  data: { code?: string; name?: string; serviceGroupId?: number; description?: string; duration?: number },
   adminId: number,
   ip: string
 ) => {
@@ -229,9 +232,10 @@ export const updateService = async (
   await prisma.service.update({
     where: { id },
     data: {
-      code: data.code ? data.code.trim().toUpperCase() : service.code,
-      name: data.name?.trim() ?? service.name,
-      description: data.description !== undefined ? (data.description?.trim() || null) : service.description,
+      code:           data.code ? data.code.trim().toUpperCase() : service.code,
+      name:           data.name?.trim() ?? service.name,
+      description:    data.description !== undefined ? (data.description?.trim() || null) : service.description,
+      duration:       data.duration !== undefined ? data.duration : service.duration,
       serviceGroupId: data.serviceGroupId ?? service.serviceGroupId,
     },
   })

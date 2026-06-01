@@ -31,6 +31,23 @@ const btn = {
   danger:  { backgroundColor: '#dc2626', color: 'white' } as React.CSSProperties,
 }
 
+const DURATION_OPTIONS = [
+  { value: 0,   label: 'Chưa cấu hình',       hint: '' },
+  { value: 15,  label: '15 phút',              hint: 'Tư vấn, khám sơ bộ' },
+  { value: 30,  label: '30 phút',              hint: 'Khám tổng quát' },
+  { value: 45,  label: '45 phút',              hint: 'Trám răng' },
+  { value: 60,  label: '60 phút',              hint: 'Nhổ răng, lấy cao răng' },
+  { value: 75,  label: '75 phút',              hint: '' },
+  { value: 90,  label: '90 phút',              hint: 'Điều trị tủy' },
+  { value: 120, label: '120 phút',             hint: 'Ca điều trị phức tạp' },
+]
+
+function fmtDuration(d: number): string {
+  if (!d || d === 0) return '—'
+  const opt = DURATION_OPTIONS.find(o => o.value === d)
+  return opt ? opt.label : `${d} phút`
+}
+
 function fmtDate(d: string | null | undefined) {
   if (!d) return '—'
   return new Date(d).toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric' })
@@ -303,14 +320,16 @@ function ServiceGroupsTab() {
 
 function ServiceFormModal({ mode, initial, groups, onSave, onClose }: {
   mode: 'add' | 'edit'; initial?: Service; groups: ServiceGroup[]
-  onSave: (d: { code: string; name: string; serviceGroupId: number; description: string }) => Promise<void>; onClose: () => void
+  onSave: (d: { code: string; name: string; serviceGroupId: number; description: string; duration: number }) => Promise<void>
+  onClose: () => void
 }) {
-  const [code, setCode] = useState(initial?.code ?? '')
-  const [name, setName] = useState(initial?.name ?? '')
-  const [groupId, setGroupId] = useState<number>(initial?.serviceGroupId ?? (groups[0]?.id ?? 0))
+  const [code,        setCode]        = useState(initial?.code        ?? '')
+  const [name,        setName]        = useState(initial?.name        ?? '')
+  const [groupId,     setGroupId]     = useState<number>(initial?.serviceGroupId ?? (groups[0]?.id ?? 0))
   const [description, setDescription] = useState(initial?.description ?? '')
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState('')
+  const [duration,    setDuration]    = useState<number>(initial?.duration ?? 0)
+  const [loading,     setLoading]     = useState(false)
+  const [error,       setError]       = useState('')
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -318,8 +337,11 @@ function ServiceFormModal({ mode, initial, groups, onSave, onClose }: {
     if (!name.trim()) { setError('Tên dịch vụ không được để trống'); return }
     if (!groupId) { setError('Vui lòng chọn nhóm dịch vụ'); return }
     setLoading(true); setError('')
-    try { await onSave({ code: code.trim(), name: name.trim(), serviceGroupId: groupId, description: description.trim() }) }
-    catch (err: any) { setError(err.response?.data?.message || 'Lỗi hệ thống'); setLoading(false) }
+    try {
+      await onSave({ code: code.trim(), name: name.trim(), serviceGroupId: groupId, description: description.trim(), duration })
+    } catch (err: any) {
+      setError(err.response?.data?.message || 'Lỗi hệ thống'); setLoading(false)
+    }
   }
 
   return (
@@ -333,29 +355,60 @@ function ServiceFormModal({ mode, initial, groups, onSave, onClose }: {
         <form onSubmit={handleSubmit}>
           <div style={{ padding: '20px 24px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
             {error && <ErrorBanner msg={error} />}
-            <Field label="Mã dịch vụ" required>
-              <TextInput value={code} onChange={setCode} placeholder="Ví dụ: DV011" autoFocus />
-            </Field>
-            <Field label="Tên dịch vụ" required>
-              <TextInput value={name} onChange={setName} placeholder="Tên dịch vụ..." />
-            </Field>
+
+            {/* Mã + Tên */}
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: '12px' }}>
+              <Field label="Mã dịch vụ" required>
+                <TextInput value={code} onChange={setCode} placeholder="DV011" autoFocus />
+              </Field>
+              <Field label="Tên dịch vụ" required>
+                <TextInput value={name} onChange={setName} placeholder="Tên dịch vụ..." />
+              </Field>
+            </div>
+
+            {/* Nhóm dịch vụ */}
             <Field label="Nhóm dịch vụ" required>
               <div style={{ position: 'relative' }}>
-                <select
-                  value={groupId}
-                  onChange={e => setGroupId(Number(e.target.value))}
-                  style={{
-                    width: '100%', padding: '10px 36px 10px 12px', border: '1.5px solid #e5e7eb',
-                    borderRadius: '8px', fontSize: '14px', outline: 'none',
-                    appearance: 'none', backgroundColor: 'white', cursor: 'pointer', boxSizing: 'border-box',
-                  }}
-                >
+                <select value={groupId} onChange={e => setGroupId(Number(e.target.value))} style={{
+                  width: '100%', padding: '10px 36px 10px 12px', border: '1.5px solid #e5e7eb',
+                  borderRadius: '8px', fontSize: '14px', outline: 'none',
+                  appearance: 'none', backgroundColor: 'white', cursor: 'pointer', boxSizing: 'border-box',
+                }}>
                   <option value={0} disabled>-- Chọn nhóm --</option>
                   {groups.map(g => <option key={g.id} value={g.id}>{g.name}</option>)}
                 </select>
                 <ChevronDown size={15} color="#9ca3af" style={{ position: 'absolute', right: '10px', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }} />
               </div>
             </Field>
+
+            {/* Thời lượng thực hiện */}
+            <Field label="Thời lượng thực hiện (phút)">
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <input
+                  type="number" min={0} max={480} step={5}
+                  value={duration || ''}
+                  onChange={e => setDuration(Number(e.target.value) || 0)}
+                  placeholder="0"
+                  style={{
+                    width: '120px', padding: '10px 12px', border: '1.5px solid #e5e7eb',
+                    borderRadius: '8px', fontSize: '14px', outline: 'none', boxSizing: 'border-box',
+                  }}
+                  onFocus={e => (e.currentTarget.style.borderColor = '#3b82f6')}
+                  onBlur={e => (e.currentTarget.style.borderColor = '#e5e7eb')}
+                />
+                <span style={{ fontSize: '13px', color: '#6b7280' }}>phút</span>
+                {duration > 0 && (
+                  <span style={{ fontSize: '12px', color: '#2563eb', backgroundColor: '#eff6ff', padding: '3px 10px', borderRadius: '99px', fontWeight: 600 }}>
+                    {duration} phút / lịch hẹn
+                  </span>
+                )}
+              </div>
+              <p style={{ fontSize: '11px', color: '#9ca3af', marginTop: '5px' }}>
+                Để trống hoặc nhập 0 nếu chưa xác định. Dùng để tính slot khi đặt lịch hẹn.
+              </p>
+            </Field>
+
+            {/* Mô tả */}
             <Field label="Mô tả">
               <textarea
                 value={description}
@@ -380,10 +433,16 @@ function ServiceFormModal({ mode, initial, groups, onSave, onClose }: {
 }
 
 function ServiceDetailModal({ service, onClose }: { service: Service; onClose: () => void }) {
+  const durOpt = DURATION_OPTIONS.find(o => o.value === service.duration)
+  const durLabel = service.duration > 0
+    ? `${service.duration} phút${durOpt?.hint ? ` — ${durOpt.hint}` : ''}`
+    : 'Chưa cấu hình'
+
   const rows = [
     { label: 'Mã dịch vụ',     value: service.code },
     { label: 'Tên dịch vụ',    value: service.name },
     { label: 'Nhóm',           value: service.serviceGroup.name },
+    { label: 'Thời lượng',     value: durLabel },
     { label: 'Mô tả',          value: service.description || '—' },
     { label: 'Ngày tạo',       value: fmtDate(service.createdAt) },
     { label: 'Ngày hoạt động', value: fmtDate(service.activatedAt) },
@@ -658,14 +717,14 @@ function ServicesListTab() {
       <div style={{ backgroundColor: 'white', borderRadius: '12px', border: '1px solid #e5e7eb', overflowX: 'auto' }}>
         <div style={{ minWidth: '760px' }}>
         <div style={{ borderRadius: '12px 12px 0 0', overflow: 'hidden' }}>
-          <TableHeader cols={['80px', '1fr', '140px', '100px', '80px', '140px', '148px']} labels={['Mã DV', 'Tên dịch vụ', 'Nhóm', 'Ngày tạo', 'Lượt dùng', 'Trạng thái', 'Thao tác']} lastRight />
+          <TableHeader cols={['80px', '1fr', '140px', '90px', '80px', '140px', '148px']} labels={['Mã DV', 'Tên dịch vụ', 'Nhóm', 'Thời lượng', 'Lượt dùng', 'Trạng thái', 'Thao tác']} lastRight />
         </div>
 
         {loading ? <CenterLoader />
           : services.length === 0 ? <EmptyMsg msg="Không có dịch vụ nào phù hợp." />
           : paginated.map((sv, i) => (
             <div key={sv.id} style={{
-              display: 'grid', gridTemplateColumns: '80px 1fr 140px 100px 80px 140px 148px',
+              display: 'grid', gridTemplateColumns: '80px 1fr 140px 90px 80px 140px 148px',
               padding: '12px 20px', alignItems: 'center',
               borderBottom: i < paginated.length - 1 ? '1px solid #f3f4f6' : 'none',
             }}>
@@ -681,7 +740,14 @@ function ServicesListTab() {
                 )}
               </div>
               <span style={{ fontSize: '13px', color: '#6b7280' }}>{sv.serviceGroup.name}</span>
-              <span style={{ fontSize: '13px', color: '#6b7280' }}>{fmtDate(sv.createdAt)}</span>
+              <span style={{
+                fontSize: '12px', fontWeight: 600,
+                color: sv.duration > 0 ? '#2563eb' : '#d1d5db',
+                backgroundColor: sv.duration > 0 ? '#eff6ff' : '#f9fafb',
+                padding: '3px 8px', borderRadius: '6px', display: 'inline-block',
+              }}>
+                {fmtDuration(sv.duration)}
+              </span>
               <span style={{ fontSize: '13px', color: '#374151', fontWeight: 500 }}>{fmtNum(sv.usageCount)}</span>
               <StatusBadge status={sv.status} />
               <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '4px' }}>

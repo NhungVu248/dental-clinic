@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { NavLink, useNavigate } from 'react-router-dom'
 import {
   HeartPulse, LayoutDashboard, Users, Stethoscope, Tag, ScrollText,
-  ChevronRight, ChevronLeft, ChevronDown, UserCog, KeyRound, LogOut
+  ChevronRight, ChevronLeft, ChevronDown, UserCog, KeyRound, LogOut, Clock, CalendarDays, CalendarOff, MessageSquare,
 } from 'lucide-react'
 import { useAuthStore } from '../stores/auth.store'
 
@@ -29,6 +29,20 @@ const menuItems = [
       },
       { label: 'Bảng giá dịch vụ', icon: Tag,        path: '/pricing' },
       { label: 'Nhật ký hệ thống', icon: ScrollText, path: '/logs' },
+    ]
+  },
+  {
+    section: 'CẤU HÌNH LỊCH LÀM VIỆC',
+    items: [
+      { label: 'Ca làm việc',          icon: Clock,        path: '/shifts' },
+      { label: 'Phân công lịch trực', icon: CalendarDays, path: '/schedules' },
+      { label: 'Ngày nghỉ lễ',        icon: CalendarOff,  path: '/holidays' },
+    ]
+  },
+  {
+    section: 'CÀI ĐẶT',
+    items: [
+      { label: 'Thông báo SMS', icon: MessageSquare, path: '/sms' },
     ]
   }
 ]

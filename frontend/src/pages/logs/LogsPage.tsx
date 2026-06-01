@@ -101,11 +101,10 @@ export default function LogsPage() {
 
   const params = { search, action, status, module, startDate, endDate, page, limit: LIMIT }
 
-  const { data, isLoading, isError } = useQuery({
+  const { data, isLoading, isError } = useQuery<{ logs: any[]; total: number; totalPages: number }>({
     queryKey: ['logs', params],
     queryFn: () => authApi.getLogs(params).then(r => r.data),
-    keepPreviousData: true,
-  } as any)
+  })
 
   const logs: any[]  = data?.logs ?? []
   const total: number = data?.total ?? 0

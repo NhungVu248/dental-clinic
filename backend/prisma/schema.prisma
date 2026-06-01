@@ -35,6 +35,9 @@ model User {
   certificates  UserCertificate[]
   serviceGroups ServiceGroupDoctor[]
   priceLogs     ServicePrice[]       @relation("PriceCreator")
+  doctorSchedules  DoctorSchedule[]  @relation("DoctorSchedules")
+  createdSchedules DoctorSchedule[]  @relation("ScheduleCreator")
+  createdHolidays  Holiday[]         @relation("HolidayCreator")
 
   // Profile theo vai trò
   adminProfile       AdminProfile?
@@ -320,8 +323,9 @@ model ServiceGroup {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
-  doctors  ServiceGroupDoctor[]
-  services Service[]
+  doctors   ServiceGroupDoctor[]
+  services  Service[]
+  schedules DoctorSchedule[]
 }
 
 model ServiceGroupDoctor {
@@ -339,6 +343,7 @@ model Service {
   code           String         @unique
   name           String
   description    String?        @db.Text
+  duration       Int            @default(0)   // thời lượng thực hiện (phút, 0 = chưa cấu hình)
   status         String         @default("INACTIVE") // INACTIVE | ACTIVE | SUSPENDED | DISCONTINUED
   usageCount     Int            @default(0)
   activatedAt    DateTime?
@@ -363,4 +368,102 @@ model ServicePrice {
   creator     User?     @relation("PriceCreator", fields: [createdBy], references: [id])
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
+}
+
+// ─── SMS THÔNG BÁO (UC10) ────────────────────────────────────
+
+/// Singleton cấu hình SMS gateway (always id = 1)
+model SmsConfig {
+  id          Int      @id
+  isEnabled   Boolean  @default(true)
+  provider    String   @default("VIETTEL") // VIETTEL | ESMS | TWILIO | OTHER
+  apiKey      String?  @db.Text
+  secretKey   String?  @db.Text            // eSMS SecretKey / Twilio Auth Token
+  brandname   String   @default("DentCare")
+  dailyLimit  Int      @default(500)
+  quietStart  String   @default("21:00")  // HH:MM – bắt đầu giờ im lặng
+  quietEnd    String   @default("07:00")  // HH:MM – kết thúc giờ im lặng
+  updatedAt   DateTime @updatedAt
+}
+
+/// Mẫu nội dung SMS cho từng loại sự kiện
+model SmsTemplate {
+  id        Int      @id @default(autoincrement())
+  type      String   @unique // CONFIRM_BOOKING | REMINDER_24H | REMINDER_2H | CANCEL | RESCHEDULE
+  name      String
+  content   String   @db.Text
+  isEnabled Boolean  @default(true)
+  sortOrder Int      @default(0)
+  updatedAt DateTime @updatedAt
+}
+
+/// Log mỗi tin SMS đã / đang / thất bại gửi
+model SmsLog {
+  id            Int       @id @default(autoincrement())
+  recipientName String?
+  phone         String
+  type          String
+  status        String    @default("PENDING") // PENDING | SUCCESS | FAILED
+  content       String    @db.Text
+  retryCount    Int       @default(0)
+  errorMsg      String?
+  sentAt        DateTime?
+  createdAt     DateTime  @default(now())
+}
+
+// ─── NGÀY NGHỈ LỄ (UC07) ────────────────────────────────────
+
+model Holiday {
+  id          Int      @id @default(autoincrement())
+  name        String
+  startDate   DateTime // date-only, stored at UTC midnight
+  endDate     DateTime // inclusive end date
+  type        String   @default("NATIONAL") // NATIONAL | PRIVATE | RECURRING
+  sendSms     Boolean  @default(false)
+  autoCancel  Boolean  @default(false)
+  createdBy   Int?
+  creator     User?    @relation("HolidayCreator", fields: [createdBy], references: [id], onDelete: SetNull)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+// ─── CA LÀM VIỆC (UC06) ──────────────────────────────────────
+
+model WorkShift {
+  id           Int      @id @default(autoincrement())
+  name         String   @unique
+  startTime    String   // "HH:MM"
+  endTime      String   // "HH:MM"
+  slotDuration Int      // phút / lịch hẹn (tối thiểu 10)
+  bufferTime   Int      @default(0)  // phút đệm giữa hai lịch hẹn (0/5/10/15)
+  maxPatients  Int      // số BN tối đa / bác sĩ / ca
+  reserveSlots Int      @default(1)  // slot dự phòng cấp cứu giữ lại / bác sĩ / ca
+  applyDays    Json     // [2,3,4,5,6] – 2=T2(Mon)…7=T7(Sat), 0=CN(Sun)
+  isActive     Boolean  @default(true)
+  colorCode    String   @default("blue") // blue|green|purple|orange|red|teal|pink
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  schedules    DoctorSchedule[]
+}
+
+// ─── LỊCH TRỰC BÁC SĨ (UC08) ─────────────────────────────────
+
+model DoctorSchedule {
+  id             Int           @id @default(autoincrement())
+  doctorId       Int
+  doctor         User          @relation("DoctorSchedules", fields: [doctorId], references: [id])
+  shiftId        Int
+  shift          WorkShift     @relation(fields: [shiftId], references: [id])
+  workDate       DateTime      // UTC midnight của ngày làm việc
+  serviceGroupId Int?
+  serviceGroup   ServiceGroup? @relation(fields: [serviceGroupId], references: [id], onDelete: SetNull)
+  note           String?       @db.Text
+  isOverride     Boolean       @default(false) // Admin override khẩn cấp (E3)
+  createdBy      Int?
+  creator        User?         @relation("ScheduleCreator", fields: [createdBy], references: [id], onDelete: SetNull)
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+
+  @@unique([doctorId, shiftId, workDate])
 }
