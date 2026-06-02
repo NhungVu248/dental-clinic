@@ -29,6 +29,7 @@ const todayUTC = (): Date => {
 const shape = (h: {
   id: number; name: string; startDate: Date; endDate: Date;
   type: string; sendSms: boolean; autoCancel: boolean;
+  startTime: string | null; endTime: string | null;
   createdAt: Date; updatedAt: Date;
 }) => ({
   id:            h.id,
@@ -38,6 +39,8 @@ const shape = (h: {
   type:          h.type,
   sendSms:       h.sendSms,
   autoCancel:    h.autoCancel,
+  startTime:     h.startTime ?? null,
+  endTime:       h.endTime   ?? null,
   conflictCount: 0, // placeholder — appointments module not yet built
   createdAt:     h.createdAt.toISOString(),
   updatedAt:     h.updatedAt.toISOString(),
@@ -66,6 +69,8 @@ export const createHoliday = async (
     type: string
     sendSms: boolean
     autoCancel: boolean
+    startTime?: string | null
+    endTime?: string | null
   },
   adminId: number,
   ip: string
@@ -78,6 +83,11 @@ export const createHoliday = async (
   if (!TYPE_LABELS[data.type])
     throw { status: 400, message: 'Loại ngày nghỉ không hợp lệ' }
 
+  // startTime/endTime only valid for PRIVATE and RECURRING
+  const hasTimeWindow = data.type !== 'NATIONAL' && data.startTime && data.endTime
+  if (hasTimeWindow && data.startTime! >= data.endTime!)
+    throw { status: 400, message: 'Giờ kết thúc phải sau giờ bắt đầu' }
+
   const row = await prisma.holiday.create({
     data: {
       name:       data.name.trim(),
@@ -86,6 +96,8 @@ export const createHoliday = async (
       type:       data.type,
       sendSms:    data.sendSms    ?? false,
       autoCancel: data.autoCancel ?? false,
+      startTime:  hasTimeWindow ? data.startTime! : null,
+      endTime:    hasTimeWindow ? data.endTime!   : null,
       createdBy:  adminId,
     },
   })
@@ -108,6 +120,8 @@ export const updateHoliday = async (
     type?: string
     sendSms?: boolean
     autoCancel?: boolean
+    startTime?: string | null
+    endTime?: string | null
   },
   adminId: number,
   ip: string
@@ -127,15 +141,25 @@ export const updateHoliday = async (
   if (data.type && !TYPE_LABELS[data.type])
     throw { status: 400, message: 'Loại ngày nghỉ không hợp lệ' }
 
+  const newType = data.type ?? row.type
+  // Determine new startTime/endTime
+  const newStartTime = 'startTime' in data ? data.startTime : row.startTime
+  const newEndTime   = 'endTime'   in data ? data.endTime   : row.endTime
+  const hasTimeWindow = newType !== 'NATIONAL' && newStartTime && newEndTime
+  if (hasTimeWindow && newStartTime! >= newEndTime!)
+    throw { status: 400, message: 'Giờ kết thúc phải sau giờ bắt đầu' }
+
   await prisma.holiday.update({
     where: { id },
     data: {
       name:       data.name !== undefined  ? data.name.trim() : row.name,
       startDate:  data.startDate           ? toUTC(data.startDate)  : row.startDate,
       endDate:    data.endDate             ? toUTC(data.endDate)    : row.endDate,
-      type:       data.type               ?? row.type,
+      type:       newType,
       sendSms:    data.sendSms            !== undefined ? data.sendSms    : row.sendSms,
       autoCancel: data.autoCancel         !== undefined ? data.autoCancel : row.autoCancel,
+      startTime:  hasTimeWindow ? newStartTime! : null,
+      endTime:    hasTimeWindow ? newEndTime!   : null,
     },
   })
 
@@ -152,4 +176,17 @@ export const deleteHoliday = async (id: number, adminId: number, ip: string) => 
 
   await prisma.holiday.delete({ where: { id } })
   await logAction('DELETE_HOLIDAY', `Xóa ngày nghỉ: ${row.name} (${toStr(row.startDate)})`, adminId, ip)
+}
+
+// ─── Helper for schedule service ─────────────────────────────
+
+/** Returns all holidays whose date range overlaps [start, end] */
+export const getHolidaysForDateRange = async (start: Date, end: Date) => {
+  return prisma.holiday.findMany({
+    where: {
+      startDate: { lte: end },
+      endDate:   { gte: start },
+    },
+    orderBy: { startDate: 'asc' },
+  })
 }

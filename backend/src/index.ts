@@ -9,7 +9,8 @@ import profileRoutes from './modules/profile/profile.routes'
 import shiftRoutes    from './modules/shift/shift.routes'
 import scheduleRoutes from './modules/schedule/schedule.routes'
 import holidayRoutes  from './modules/holiday/holiday.routes'
-import smsRoutes      from './modules/sms/sms.routes'
+import smsRoutes          from './modules/sms/sms.routes'
+import receptionistRoutes from './modules/receptionist/receptionist.routes'
 
 dotenv.config()
 
@@ -27,7 +28,8 @@ app.use('/api/profile', profileRoutes)
 app.use('/api/shifts',    shiftRoutes)
 app.use('/api/schedules', scheduleRoutes)
 app.use('/api/holidays',  holidayRoutes)
-app.use('/api/sms',       smsRoutes)
+app.use('/api/sms',          smsRoutes)
+app.use('/api/receptionist', receptionistRoutes)
 app.get('/health', (_, res) => res.json({ status: 'OK' }))
 
 app.listen(PORT, () => {

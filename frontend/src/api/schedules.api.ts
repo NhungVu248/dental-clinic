@@ -34,6 +34,22 @@ export interface FormData {
   groups:  { id: number; name: string }[]
 }
 
+export interface HolidayInfo {
+  id:        number
+  name:      string
+  startDate: string       // "YYYY-MM-DD"
+  endDate:   string       // "YYYY-MM-DD"
+  type:      string       // NATIONAL | PRIVATE | RECURRING
+  startTime: string | null
+  endTime:   string | null
+  color:     string       // hex
+}
+
+export interface WeekData {
+  schedules: ScheduleItem[]
+  holidays:  HolidayInfo[]
+}
+
 export type ScheduleInput = {
   doctorId:        number
   shiftId:         number
@@ -44,7 +60,7 @@ export type ScheduleInput = {
 }
 
 export const scheduleApi = {
-  getWeek:   (weekStart: string)                   => api.get<ScheduleItem[]>('/schedules', { params: { weekStart } }),
+  getWeek:   (weekStart: string)                   => api.get<WeekData>('/schedules', { params: { weekStart } }),
   getFormData: ()                                  => api.get<FormData>('/schedules/form-data'),
   create:    (data: ScheduleInput)                 => api.post<ScheduleItem>('/schedules', data),
   update:    (id: number, data: Partial<ScheduleInput & { isOverride: boolean }>) => api.put(`/schedules/${id}`, data),

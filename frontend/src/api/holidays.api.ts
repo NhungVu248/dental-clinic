@@ -8,7 +8,9 @@ export interface Holiday {
   type:          'NATIONAL' | 'PRIVATE' | 'RECURRING'
   sendSms:       boolean
   autoCancel:    boolean
-  conflictCount: number  // future: appointments in this period
+  startTime:     string | null  // "HH:MM" — PRIVATE/RECURRING only
+  endTime:       string | null  // "HH:MM" — PRIVATE/RECURRING only
+  conflictCount: number
   createdAt:     string
   updatedAt:     string
 }
@@ -20,6 +22,8 @@ export interface HolidayInput {
   type:       string
   sendSms:    boolean
   autoCancel: boolean
+  startTime?: string | null
+  endTime?:   string | null
 }
 
 export const holidayApi = {

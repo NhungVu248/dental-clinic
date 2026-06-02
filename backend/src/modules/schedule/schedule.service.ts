@@ -1,5 +1,6 @@
 import { PrismaClient } from '@prisma/client'
 import { logAction } from '../../utils/logger'
+import { getHolidaysForDateRange } from '../holiday/holiday.service'
 
 const prisma = new PrismaClient()
 
@@ -14,6 +15,27 @@ const jsToApplyDay = (jsDay: number): number => (jsDay === 0 ? 0 : jsDay + 1)
 const VN_DAY: Record<number, string> = {
   0: 'Chủ nhật', 2: 'Thứ 2', 3: 'Thứ 3',
   4: 'Thứ 4', 5: 'Thứ 5', 6: 'Thứ 6', 7: 'Thứ 7',
+}
+
+const timeToMinutes = (t: string): number => {
+  const [h, m] = t.split(':').map(Number)
+  return h * 60 + m
+}
+
+/** Returns true if the shift time range overlaps with the holiday's time window */
+const isShiftBlockedByHoliday = (
+  shiftStart: string,
+  shiftEnd: string,
+  holiday: { type: string; startTime: string | null; endTime: string | null }
+): boolean => {
+  if (holiday.type === 'NATIONAL') return true
+  // PRIVATE / RECURRING: null time = full day block
+  if (!holiday.startTime || !holiday.endTime) return true
+  const ss = timeToMinutes(shiftStart)
+  const se = timeToMinutes(shiftEnd)
+  const hs = timeToMinutes(holiday.startTime)
+  const he = timeToMinutes(holiday.endTime)
+  return ss < he && se > hs
 }
 
 const formatSchedule = (s: any) => ({
@@ -45,18 +67,38 @@ const INCLUDE = {
 
 // ─── UC08: Queries ────────────────────────────────────────────
 
+const HOLIDAY_COLORS: Record<string, string> = {
+  NATIONAL:  '#ef4444',
+  PRIVATE:   '#9333ea',
+  RECURRING: '#d97706',
+}
+
 export const getWeekSchedules = async (weekStart: string) => {
   const start = parseDate(weekStart)
   const end   = new Date(start)
   end.setUTCDate(end.getUTCDate() + 7)
 
-  const rows = await prisma.doctorSchedule.findMany({
-    where:   { workDate: { gte: start, lt: end } },
-    include: INCLUDE,
-    orderBy: [{ workDate: 'asc' }, { shift: { startTime: 'asc' } }],
-  })
+  const [rows, holidayRows] = await Promise.all([
+    prisma.doctorSchedule.findMany({
+      where:   { workDate: { gte: start, lt: end } },
+      include: INCLUDE,
+      orderBy: [{ workDate: 'asc' }, { shift: { startTime: 'asc' } }],
+    }),
+    getHolidaysForDateRange(start, new Date(end.getTime() - 1)),
+  ])
 
-  return rows.map(formatSchedule)
+  const holidays = holidayRows.map(h => ({
+    id:        h.id,
+    name:      h.name,
+    startDate: h.startDate.toISOString().slice(0, 10),
+    endDate:   h.endDate.toISOString().slice(0, 10),
+    type:      h.type,
+    startTime: h.startTime ?? null,
+    endTime:   h.endTime   ?? null,
+    color:     HOLIDAY_COLORS[h.type] ?? '#6b7280',
+  }))
+
+  return { schedules: rows.map(formatSchedule), holidays }
 }
 
 /** Form-data: doctors (with groups) + active shifts + service groups */
@@ -134,6 +176,17 @@ export const createSchedule = async (
   const shiftDays = shift.applyDays as number[]
   if (!shiftDays.includes(applyDay))
     throw { status: 400, message: `Ca "${shift.name}" không hoạt động vào ${VN_DAY[applyDay]}` }
+
+  // 4.5 Kiểm tra ngày nghỉ lễ
+  const holidaysOnDay = await getHolidaysForDateRange(workDate, workDate)
+  for (const h of holidaysOnDay) {
+    if (isShiftBlockedByHoliday(shift.startTime, shift.endTime, h)) {
+      const timeInfo = (h.type !== 'NATIONAL' && h.startTime && h.endTime)
+        ? ` (${h.startTime}–${h.endTime})`
+        : ''
+      throw { status: 400, message: `Ngày ${data.workDate} có ngày nghỉ "${h.name}"${timeInfo}. Không thể phân ca.` }
+    }
+  }
 
   // 5. Tối đa 2 ca / ngày / bác sĩ
   const dayEnd = new Date(workDate); dayEnd.setUTCDate(dayEnd.getUTCDate() + 1)
@@ -226,6 +279,17 @@ export const updateSchedule = async (
     const shiftDays = shift.applyDays as number[]
     if (!shiftDays.includes(applyDay))
       throw { status: 400, message: `Ca "${shift.name}" không hoạt động vào ${VN_DAY[applyDay]}` }
+
+    // Kiểm tra ngày nghỉ lễ
+    const holidaysOnDay = await getHolidaysForDateRange(newWorkDate, newWorkDate)
+    for (const h of holidaysOnDay) {
+      if (isShiftBlockedByHoliday(shift.startTime, shift.endTime, h)) {
+        const timeInfo = (h.type !== 'NATIONAL' && h.startTime && h.endTime)
+          ? ` (${h.startTime}–${h.endTime})`
+          : ''
+        throw { status: 400, message: `Ngày ${data.workDate ?? schedule.workDate.toISOString().slice(0,10)} có ngày nghỉ "${h.name}"${timeInfo}. Không thể phân ca.` }
+      }
+    }
 
     // Tối đa 2 ca / ngày (bỏ qua bản thân)
     const dayEnd = new Date(newWorkDate); dayEnd.setUTCDate(dayEnd.getUTCDate() + 1)

@@ -126,10 +126,14 @@ function HolidayFormModal({
   const [startDate,  setStartDate]  = useState(holiday?.startDate  ?? '')
   const [endDate,    setEndDate]    = useState(holiday?.endDate     ?? '')
   const [type,       setType]       = useState<string>(holiday?.type ?? 'NATIONAL')
+  const [startTime,  setStartTime]  = useState(holiday?.startTime  ?? '')
+  const [endTime,    setEndTime]    = useState(holiday?.endTime     ?? '')
   const [sendSms,    setSendSms]    = useState(holiday?.sendSms    ?? false)
   const [autoCancel, setAutoCancel] = useState(holiday?.autoCancel ?? false)
   const [loading,    setLoading]    = useState(false)
   const [error,      setError]      = useState('')
+
+  const hasTimeConfig = type === 'PRIVATE' || type === 'RECURRING'
 
   const inputStyle: React.CSSProperties = {
     width: '100%', padding: '10px 12px', border: '1.5px solid #e5e7eb',
@@ -152,9 +156,16 @@ function HolidayFormModal({
     if (!startDate)   { setError('Vui lòng chọn ngày bắt đầu'); return }
     if (!endDate)     { setError('Vui lòng chọn ngày kết thúc'); return }
     if (endDate < startDate) { setError('Ngày kết thúc phải sau hoặc bằng ngày bắt đầu'); return }
+    if (hasTimeConfig && startTime && endTime && startTime >= endTime) {
+      setError('Giờ kết thúc phải sau giờ bắt đầu'); return
+    }
     setLoading(true); setError('')
     try {
-      await onSave({ name: name.trim(), startDate, endDate, type, sendSms, autoCancel })
+      await onSave({
+        name: name.trim(), startDate, endDate, type, sendSms, autoCancel,
+        startTime: hasTimeConfig && startTime ? startTime : null,
+        endTime:   hasTimeConfig && endTime   ? endTime   : null,
+      })
     } catch (err: any) {
       setError(err.response?.data?.message || 'Lỗi hệ thống')
       setLoading(false)
@@ -251,6 +262,44 @@ function HolidayFormModal({
                 </div>
               )}
             </div>
+
+            {/* Time window (PRIVATE / RECURRING only) */}
+            {hasTimeConfig && (
+              <div style={{ backgroundColor: '#f8faff', border: '1px solid #c7d2fe', borderRadius: '10px', padding: '14px' }}>
+                <p style={{ fontSize: '12px', fontWeight: 700, color: '#4338ca', margin: '0 0 10px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  🕐 Khung giờ nghỉ <span style={{ fontWeight: 400, color: '#6b7280' }}>(tuỳ chọn — để trống = nghỉ cả ngày)</span>
+                </p>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                  <div>
+                    <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: '#374151', marginBottom: '5px' }}>
+                      Từ giờ
+                    </label>
+                    <input
+                      type="time" value={startTime}
+                      onChange={e => setStartTime(e.target.value)}
+                      style={{ ...inputStyle, fontSize: '13px' }}
+                      onFocus={onFocus} onBlur={onBlur}
+                    />
+                  </div>
+                  <div>
+                    <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: '#374151', marginBottom: '5px' }}>
+                      Đến giờ
+                    </label>
+                    <input
+                      type="time" value={endTime}
+                      onChange={e => setEndTime(e.target.value)}
+                      style={{ ...inputStyle, fontSize: '13px' }}
+                      onFocus={onFocus} onBlur={onBlur}
+                    />
+                  </div>
+                </div>
+                {startTime && endTime && (
+                  <p style={{ fontSize: '11px', color: '#6366f1', marginTop: '8px' }}>
+                    Ca làm việc nằm trong {startTime}–{endTime} sẽ bị khoá, ngoài khung này vẫn phân ca được.
+                  </p>
+                )}
+              </div>
+            )}
 
             {/* Checkboxes */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
@@ -503,6 +552,14 @@ function HolidayItem({ holiday, onEdit, onDelete }: {
         <p style={{ fontSize: '14px', fontWeight: 700, color: '#111827', margin: 0 }}>{holiday.name}</p>
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '4px', flexWrap: 'wrap' }}>
           <span style={{ fontSize: '12px', color: '#6b7280' }}>{fmtRange(holiday)}</span>
+          {holiday.startTime && holiday.endTime && (
+            <>
+              <span style={{ fontSize: '11px', color: '#9ca3af' }}>•</span>
+              <span style={{ fontSize: '11px', color: '#6366f1', fontWeight: 600, backgroundColor: '#eef2ff', padding: '2px 7px', borderRadius: '99px' }}>
+                🕐 {holiday.startTime}–{holiday.endTime}
+              </span>
+            </>
+          )}
           <span style={{ fontSize: '11px', color: '#9ca3af' }}>•</span>
           <span style={{ fontSize: '11px', fontWeight: 600, color: tc.text, backgroundColor: tc.bg, padding: '2px 8px', borderRadius: '99px' }}>
             {tc.label}

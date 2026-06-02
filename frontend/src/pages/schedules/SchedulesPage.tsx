@@ -4,7 +4,7 @@ import {
   AlertTriangle, Pencil, Trash2, UserRound, CalendarDays,
   LayoutGrid, Users, Layers,
 } from 'lucide-react'
-import { scheduleApi, type ScheduleItem, type ScheduleInput, type FormDoctor } from '../../api/schedules.api'
+import { scheduleApi, type ScheduleItem, type ScheduleInput, type FormDoctor, type HolidayInfo } from '../../api/schedules.api'
 import type { WorkShift } from '../../api/shifts.api'
 
 // ─── Date helpers ─────────────────────────────────────────────
@@ -63,6 +63,35 @@ const btn = {
   ghost:   { backgroundColor: 'transparent', color: '#6b7280', border: '1px solid #e5e7eb' } as React.CSSProperties,
   danger:  { backgroundColor: '#dc2626', color: 'white' } as React.CSSProperties,
 }
+
+// ─── Holiday helpers ──────────────────────────────────────────
+
+const tmToMin = (t: string): number => {
+  const [h, m] = t.split(':').map(Number)
+  return h * 60 + m
+}
+
+/** Returns the first holiday that blocks this date+shift combination, or null */
+const getHolidayBlock = (
+  dateStr: string,
+  shiftStart: string,
+  shiftEnd:   string,
+  holidays:   HolidayInfo[]
+): HolidayInfo | null => {
+  for (const h of holidays) {
+    if (dateStr < h.startDate || dateStr > h.endDate) continue
+    if (h.type === 'NATIONAL') return h
+    if (!h.startTime || !h.endTime) return h   // full-day PRIVATE/RECURRING
+    // Time-window overlap
+    if (tmToMin(shiftStart) < tmToMin(h.endTime) && tmToMin(shiftEnd) > tmToMin(h.startTime))
+      return h
+  }
+  return null
+}
+
+/** Returns all holidays that cover this date (for header badge) */
+const getDayHolidays = (dateStr: string, holidays: HolidayInfo[]): HolidayInfo[] =>
+  holidays.filter(h => dateStr >= h.startDate && dateStr <= h.endDate)
 
 // ─── Toast ───────────────────────────────────────────────────
 
@@ -741,6 +770,7 @@ function EmptyTab({ msg }: { msg: string }) {
 export default function SchedulesPage() {
   const [weekStart,    setWeekStart]    = useState(() => getMondayOfWeek(new Date()))
   const [schedules,    setSchedules]    = useState<ScheduleItem[]>([])
+  const [holidays,     setHolidays]     = useState<HolidayInfo[]>([])
   const [shifts,       setShifts]       = useState<WorkShift[]>([])
   const [doctors,      setDoctors]      = useState<FormDoctor[]>([])
   const [groups,       setGroups]       = useState<{ id: number; name: string }[]>([])
@@ -761,7 +791,8 @@ export default function SchedulesPage() {
     setLoading(true)
     try {
       const res = await scheduleApi.getWeek(toDateStr(weekStart))
-      setSchedules(res.data)
+      setSchedules(res.data.schedules)
+      setHolidays(res.data.holidays)
     } catch { showToast('Không thể tải lịch trực', 'error') }
     finally { setLoading(false) }
   }, [weekStart])
@@ -944,12 +975,27 @@ export default function SchedulesPage() {
             <div style={{ padding: '12px 16px', fontSize: '12px', fontWeight: 700, color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.04em', borderRight: '1px solid #e5e7eb' }}>
               Ca / Ngày
             </div>
-            {weekDays.map((d, i) => (
-              <div key={i} style={{ padding: '12px 8px', textAlign: 'center', borderRight: i < WEEK_DAYS_COUNT - 1 ? '1px solid #e5e7eb' : 'none' }}>
-                <p style={{ fontSize: '13px', fontWeight: 700, color: '#374151', margin: 0 }}>{VN_DAY[d.getDay()]}</p>
-                <p style={{ fontSize: '12px', color: '#9ca3af', margin: '2px 0 0' }}>{fmtDate(d)}</p>
-              </div>
-            ))}
+            {weekDays.map((d, i) => {
+              const dayHols = getDayHolidays(toDateStr(d), holidays)
+              return (
+                <div key={i} style={{ padding: '10px 6px', textAlign: 'center', borderRight: i < WEEK_DAYS_COUNT - 1 ? '1px solid #e5e7eb' : 'none' }}>
+                  <p style={{ fontSize: '13px', fontWeight: 700, color: '#374151', margin: 0 }}>{VN_DAY[d.getDay()]}</p>
+                  <p style={{ fontSize: '12px', color: '#9ca3af', margin: '2px 0 0' }}>{fmtDate(d)}</p>
+                  {dayHols.map(h => (
+                    <div key={h.id} style={{
+                      marginTop: '5px', fontSize: '10px', fontWeight: 700,
+                      color: 'white', backgroundColor: h.color,
+                      borderRadius: '4px', padding: '2px 5px',
+                      overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+                      maxWidth: '100%',
+                    }} title={h.name}>
+                      🎌 {h.name}
+                      {h.startTime && h.endTime ? ` ${h.startTime}–${h.endTime}` : ''}
+                    </div>
+                  ))}
+                </div>
+              )
+            })}
           </div>
 
           {/* Grid rows (one per shift) */}
@@ -987,19 +1033,56 @@ export default function SchedulesPage() {
                     const cellSchedules = schedules.filter(
                       s => s.shiftId === shift.id && s.workDate === dateStr
                     )
+                    const blocked = applies
+                      ? getHolidayBlock(dateStr, shift.startTime, shift.endTime, holidays)
+                      : null
 
                     return (
                       <div key={dIdx}
                         style={{
                           padding: '8px',
                           borderRight: dIdx < WEEK_DAYS_COUNT - 1 ? '1px solid #f3f4f6' : 'none',
-                          backgroundColor: !applies ? '#fafafa' : 'white',
+                          backgroundColor: blocked
+                            ? blocked.color + '14'
+                            : !applies ? '#fafafa' : 'white',
                           minHeight: '100px',
+                          position: 'relative',
                         }}
                       >
                         {!applies ? (
                           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%' }}>
                             <span style={{ fontSize: '11px', color: '#e5e7eb' }}>—</span>
+                          </div>
+                        ) : blocked ? (
+                          /* Holiday blocked cell */
+                          <div style={{
+                            display: 'flex', flexDirection: 'column', alignItems: 'center',
+                            justifyContent: 'center', height: '100%', minHeight: '80px',
+                            gap: '5px', padding: '8px 4px',
+                          }}>
+                            <div style={{
+                              width: '28px', height: '28px', borderRadius: '50%',
+                              backgroundColor: blocked.color + '22',
+                              display: 'flex', alignItems: 'center', justifyContent: 'center',
+                              fontSize: '14px',
+                            }}>🎌</div>
+                            <p style={{
+                              fontSize: '11px', fontWeight: 700, color: blocked.color,
+                              textAlign: 'center', margin: 0,
+                              overflow: 'hidden', textOverflow: 'ellipsis',
+                              display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' as const,
+                              maxWidth: '100%',
+                            }}>{blocked.name}</p>
+                            {blocked.startTime && blocked.endTime && (
+                              <p style={{ fontSize: '10px', color: blocked.color + 'cc', margin: 0 }}>
+                                {blocked.startTime}–{blocked.endTime}
+                              </p>
+                            )}
+                            {cellSchedules.length > 0 && (
+                              <p style={{ fontSize: '10px', color: '#ef4444', margin: 0, fontStyle: 'italic' }}>
+                                ⚠ {cellSchedules.length} ca cũ
+                              </p>
+                            )}
                           </div>
                         ) : (
                           <ScheduleCell
