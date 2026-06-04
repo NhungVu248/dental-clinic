@@ -59,8 +59,16 @@ export const smsApi = {
     api.put<{ message: string }>(`/sms/templates/${type}`, data),
   getStats:       () =>
     api.get<SmsStats>('/sms/stats'),
-  getLogs:        (params?: { page?: number; limit?: number; type?: string; status?: string }) =>
-    api.get<SmsLogsResult>('/sms/logs', { params }),
+  getLogs: (params?: {
+    page?:          number
+    limit?:         number
+    type?:          string
+    status?:        string
+    phone?:         string
+    recipientName?: string
+    dateFrom?:      string
+    dateTo?:        string
+  }) => api.get<SmsLogsResult>('/sms/logs', { params }),
   sendTest:       (data: { phone: string; type: string }) =>
     api.post<SmsLog & { templateName: string }>('/sms/test', data),
 }

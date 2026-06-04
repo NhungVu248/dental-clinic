@@ -11,11 +11,42 @@ import scheduleRoutes from './modules/schedule/schedule.routes'
 import holidayRoutes  from './modules/holiday/holiday.routes'
 import smsRoutes          from './modules/sms/sms.routes'
 import receptionistRoutes from './modules/receptionist/receptionist.routes'
+import doctorRoutes      from './modules/doctor/doctor.routes'
 
 dotenv.config()
 
 const app = express()
 const PORT = process.env.PORT || 5000
+
+// ── Auto-cancel scheduler ─────────────────────────────────────
+// Chạy mỗi phút: hủy lịch hẹn PENDING đã quá 30 phút so với giờ hẹn
+import { PrismaClient } from '@prisma/client'
+const prismaScheduler = new PrismaClient()
+
+async function autoCancelOverdueAppointments() {
+  try {
+    const cutoff = new Date(Date.now() - 30 * 60 * 1000) // now - 30 phút
+    const result = await prismaScheduler.appointment.updateMany({
+      where: {
+        status:          'PENDING',
+        appointmentDate: { lt: cutoff },
+      },
+      data: {
+        status:       'CANCELLED',
+        cancelReason: 'Tự động hủy – quá 30 phút không được xác nhận',
+      },
+    })
+    if (result.count > 0) {
+      console.log(`[auto-cancel] Đã hủy ${result.count} lịch hẹn PENDING quá hạn`)
+    }
+  } catch (err) {
+    console.error('[auto-cancel] Lỗi:', err)
+  }
+}
+
+// Chạy ngay lần đầu khi khởi động, sau đó lặp mỗi 60 giây
+autoCancelOverdueAppointments()
+setInterval(autoCancelOverdueAppointments, 60 * 1000)
 
 app.use(cors({ origin: process.env.CLIENT_URL || 'http://localhost:5173' }))
 app.use(express.json())
@@ -30,6 +61,7 @@ app.use('/api/schedules', scheduleRoutes)
 app.use('/api/holidays',  holidayRoutes)
 app.use('/api/sms',          smsRoutes)
 app.use('/api/receptionist', receptionistRoutes)
+app.use('/api/doctor',      doctorRoutes)
 app.get('/health', (_, res) => res.json({ status: 'OK' }))
 
 app.listen(PORT, () => {

@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import {
   Search, CalendarPlus, Eye, Pencil, X, Loader2,
   CheckCircle2, AlertCircle, Clock, User, CalendarDays, Phone,
-  ChevronLeft, ChevronRight, RefreshCw,
+  ChevronLeft, ChevronRight, RefreshCw, UserCheck,
 } from 'lucide-react'
 import {
   appointmentsApi,
@@ -69,14 +69,14 @@ function DetailModal({
   const d        = new Date(apt.appointmentDate)
   const dateStr  = d.toLocaleDateString('vi-VN', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })
   const timeStr  = `${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`
-  const canEdit  = ['PENDING', 'CONFIRMED'].includes(apt.status)
+  const canEdit   = ['PENDING', 'CONFIRMED'].includes(apt.status)
   const canCancel = ['PENDING', 'CONFIRMED'].includes(apt.status)
 
-  // Next valid status action
-  const NEXT_ACTION: Record<string, { label: string; status: string; color: string }> = {
-    PENDING:     { label: 'Xác nhận',          status: 'CONFIRMED',   color: '#2563eb' },
-    CONFIRMED:   { label: 'Bệnh nhân đã đến',   status: 'IN_PROGRESS', color: '#a855f7' },
-    IN_PROGRESS: { label: 'Hoàn thành',         status: 'COMPLETED',   color: '#22c55e' },
+  // Next valid status action (chỉ dành cho lễ tân)
+  // CHECKED_IN → IN_PROGRESS sẽ do bác sĩ thực hiện ở trang bác sĩ (chưa phát triển)
+  const NEXT_ACTION: Record<string, { label: string; status: string; color: string; icon?: React.ReactNode }> = {
+    PENDING:   { label: 'Xác nhận lịch hẹn',  status: 'CONFIRMED',  color: '#2563eb' },
+    CONFIRMED: { label: 'Bệnh nhân đã đến',    status: 'CHECKED_IN', color: '#0891b2' },
   }
   const nextAction = NEXT_ACTION[apt.status]
 
@@ -158,13 +158,19 @@ function DetailModal({
               {nextAction.label}
             </button>
           )}
-          {apt.status === 'CONFIRMED' && (
+          {['CONFIRMED', 'CHECKED_IN'].includes(apt.status) && (
             <button
               onClick={() => onStatusChange('ABSENT')}
               disabled={statusLoading}
               style={{ ...btnGhost, color: '#b45309', borderColor: '#fcd34d' }}>
               Vắng mặt
             </button>
+          )}
+          {apt.status === 'CHECKED_IN' && (
+            <div style={{ fontSize: '11px', color: '#0891b2', backgroundColor: '#ecfeff', padding: '6px 10px', borderRadius: '7px', display: 'flex', alignItems: 'center', gap: '5px' }}>
+              <UserCheck size={12} />
+              Chờ bác sĩ tiếp nhận
+            </div>
           )}
         </div>
       </div>
@@ -498,9 +504,10 @@ export default function AppointmentListPage() {
   const [cancelOpen,   setCancelOpen]   = useState(false)
   const [cancelTarget, setCancelTarget] = useState<AppointmentItem | null>(null)
 
-  const [saving,      setSaving]      = useState(false)
-  const [statusBusy,  setStatusBusy]  = useState(false)
-  const [editError,   setEditError]   = useState('')
+  const [saving,       setSaving]       = useState(false)
+  const [statusBusy,   setStatusBusy]   = useState(false)
+  const [statusBusyId, setStatusBusyId] = useState<number | null>(null)
+  const [editError,    setEditError]    = useState('')
   const [toast,       setToast]       = useState<{ msg: string; type: 'success' | 'error' } | null>(null)
 
   // search debounce
@@ -558,14 +565,23 @@ export default function AppointmentListPage() {
 
   const handleStatusChange = async (id: number, newStatus: string) => {
     setStatusBusy(true)
+    setStatusBusyId(id)
     try {
       const res = await appointmentsApi.patchStatus(id, newStatus)
-      setDetailApt(res.data as AppointmentDetail)
-      showToast('Cập nhật trạng thái thành công', 'success')
+      // Cập nhật detailApt nếu modal đang mở
+      if (detailApt?.id === id) setDetailApt(res.data as AppointmentDetail)
+      const STATUS_LABEL: Record<string, string> = {
+        CONFIRMED:  'Đã xác nhận lịch hẹn',
+        CHECKED_IN: 'Đã check-in bệnh nhân',
+        IN_PROGRESS:'Bắt đầu khám',
+        COMPLETED:  'Đã hoàn thành',
+        ABSENT:     'Đã đánh dấu vắng mặt',
+      }
+      showToast(STATUS_LABEL[newStatus] ?? 'Cập nhật trạng thái thành công', 'success')
       loadList()
     } catch (e: any) {
       showToast(e.response?.data?.message || 'Lỗi cập nhật trạng thái', 'error')
-    } finally { setStatusBusy(false) }
+    } finally { setStatusBusy(false); setStatusBusyId(null) }
   }
 
   const handleEdit = async (data: Record<string, unknown>) => {
@@ -604,13 +620,19 @@ export default function AppointmentListPage() {
     }
   }
 
+  // Quick status actions visible directly in the table row
+  const INLINE_ACTION: Record<string, { label: string; status: string; color: string; bg: string; icon: React.ReactNode }> = {
+    PENDING:   { label: 'Xác nhận',       status: 'CONFIRMED',  color: '#2563eb', bg: '#eff6ff', icon: <CheckCircle2 size={12} /> },
+    CONFIRMED: { label: 'Check-in',       status: 'CHECKED_IN', color: '#0891b2', bg: '#ecfeff', icon: <UserCheck size={12} /> },
+  }
+
   const TABS: { key: Tab; label: string }[] = [
     { key: 'all',      label: `Tất cả (${tabCounts.all})` },
     { key: 'today',    label: `Hôm nay (${tabCounts.today})` },
     { key: 'upcoming', label: `Sắp tới (${tabCounts.upcoming})` },
   ]
 
-  const STATUS_ORDER = ['PENDING', 'CONFIRMED', 'IN_PROGRESS', 'COMPLETED', 'ABSENT', 'CANCELLED']
+  const STATUS_ORDER = ['PENDING', 'CONFIRMED', 'CHECKED_IN', 'IN_PROGRESS', 'COMPLETED', 'ABSENT', 'CANCELLED']
 
   return (
     <div style={{ maxWidth: '1200px' }}>
@@ -707,11 +729,11 @@ export default function AppointmentListPage() {
         {/* Table header */}
         <div style={{
           display: 'grid',
-          gridTemplateColumns: '140px 1fr 1fr 1fr 130px 100px',
+          gridTemplateColumns: '140px 1fr 1fr 1fr 130px 160px 80px',
           gap: '0', backgroundColor: '#f9fafb',
           borderBottom: '1px solid #e5e7eb', padding: '10px 20px',
         }}>
-          {['MÃ / NGÀY', 'BỆNH NHÂN', 'BÁC SĨ', 'DỊCH VỤ', 'TRẠNG THÁI', 'THAO TÁC'].map(h => (
+          {['MÃ / NGÀY', 'BỆNH NHÂN', 'BÁC SĨ', 'DỊCH VỤ', 'TRẠNG THÁI', 'CẬP NHẬT NHANH', 'THAO TÁC'].map(h => (
             <div key={h} style={{ fontSize: '11px', fontWeight: 700, color: '#6b7280', letterSpacing: '0.5px', textTransform: 'uppercase' }}>{h}</div>
           ))}
         </div>
@@ -731,11 +753,14 @@ export default function AppointmentListPage() {
             const canEdit   = ['PENDING', 'CONFIRMED'].includes(apt.status)
             const canCancel = ['PENDING', 'CONFIRMED'].includes(apt.status)
 
+            const inlineAction = INLINE_ACTION[apt.status]
+            const isRowBusy = statusBusyId === apt.id
+
             return (
               <div key={apt.id} style={{
                 display: 'grid',
-                gridTemplateColumns: '140px 1fr 1fr 1fr 130px 100px',
-                gap: '0', padding: '14px 20px', alignItems: 'center',
+                gridTemplateColumns: '140px 1fr 1fr 1fr 130px 160px 80px',
+                gap: '0', padding: '12px 20px', alignItems: 'center',
                 borderBottom: idx < items.length - 1 ? '1px solid #f3f4f6' : 'none',
                 backgroundColor: 'white',
               }}
@@ -771,6 +796,32 @@ export default function AppointmentListPage() {
 
                 {/* Status */}
                 <StatusBadge status={apt.status} />
+
+                {/* Quick status update */}
+                <div>
+                  {inlineAction ? (
+                    <button
+                      onClick={() => handleStatusChange(apt.id, inlineAction.status)}
+                      disabled={isRowBusy || statusBusy}
+                      title={inlineAction.label}
+                      style={{
+                        display: 'inline-flex', alignItems: 'center', gap: '5px',
+                        padding: '5px 11px', borderRadius: '7px', border: 'none',
+                        backgroundColor: inlineAction.bg, color: inlineAction.color,
+                        fontWeight: 600, fontSize: '12px', cursor: 'pointer',
+                        opacity: (isRowBusy || statusBusy) ? 0.6 : 1,
+                        whiteSpace: 'nowrap',
+                      }}
+                    >
+                      {isRowBusy
+                        ? <Loader2 size={11} style={{ animation: 'spin 1s linear infinite' }} />
+                        : inlineAction.icon}
+                      {inlineAction.label}
+                    </button>
+                  ) : (
+                    <span style={{ fontSize: '12px', color: '#d1d5db' }}>—</span>
+                  )}
+                </div>
 
                 {/* Actions */}
                 <div style={{ display: 'flex', gap: '4px' }}>

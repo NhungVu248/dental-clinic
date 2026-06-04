@@ -41,6 +41,7 @@ export interface ServiceOption { id: number; code: string; name: string; duratio
 export const STATUS_META: Record<string, { label: string; color: string; bg: string }> = {
   PENDING:     { label: 'Chờ xác nhận', color: '#f97316', bg: '#fff7ed' },
   CONFIRMED:   { label: 'Đã xác nhận',  color: '#3b82f6', bg: '#eff6ff' },
+  CHECKED_IN:  { label: 'Đã check-in',  color: '#0891b2', bg: '#ecfeff' },
   IN_PROGRESS: { label: 'Đang khám',    color: '#a855f7', bg: '#faf5ff' },
   COMPLETED:   { label: 'Hoàn thành',   color: '#22c55e', bg: '#f0fdf4' },
   ABSENT:      { label: 'Vắng mặt',     color: '#eab308', bg: '#fefce8' },

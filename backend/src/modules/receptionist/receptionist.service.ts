@@ -616,7 +616,7 @@ export const getAppointmentById = async (id: number) => {
 // ════════════════════════════════════════════════════════════════
 
 // Terminal statuses — cannot be edited
-const TERMINAL = ['COMPLETED', 'ABSENT', 'CANCELLED', 'IN_PROGRESS']
+const TERMINAL = ['COMPLETED', 'ABSENT', 'CANCELLED', 'IN_PROGRESS', 'CHECKED_IN']
 
 export const updateAppointment = async (
   id: number,
@@ -792,9 +792,14 @@ async function sendAppointmentSms(
 // ════════════════════════════════════════════════════════════════
 
 // Valid forward transitions
+// PENDING     → CONFIRMED (lễ tân xác nhận) | CANCELLED | ABSENT
+// CONFIRMED   → CHECKED_IN (bệnh nhân đến, lễ tân check-in) | CANCELLED | ABSENT
+// CHECKED_IN  → IN_PROGRESS (bác sĩ bắt đầu khám – sẽ dùng ở trang bác sĩ)
+// IN_PROGRESS → COMPLETED (bác sĩ kết thúc)
 const VALID_TRANSITIONS: Record<string, string[]> = {
   PENDING:     ['CONFIRMED', 'CANCELLED', 'ABSENT'],
-  CONFIRMED:   ['IN_PROGRESS', 'CANCELLED', 'ABSENT'],
+  CONFIRMED:   ['CHECKED_IN', 'CANCELLED', 'ABSENT'],
+  CHECKED_IN:  ['IN_PROGRESS'],
   IN_PROGRESS: ['COMPLETED'],
   COMPLETED:   [],
   ABSENT:      [],
@@ -803,7 +808,8 @@ const VALID_TRANSITIONS: Record<string, string[]> = {
 
 // Which status change triggers which SMS template
 const STATUS_SMS: Record<string, string> = {
-  CONFIRMED: 'CONFIRM_BOOKING',
+  CONFIRMED:  'CONFIRM_BOOKING',
+  CHECKED_IN: 'CHECKIN',   // optional template – skipped silently if not found
 }
 
 export const updateAppointmentStatus = async (

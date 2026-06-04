@@ -33,12 +33,16 @@ export const getStats = async (req: Request, res: Response) => {
 
 export const getLogs = async (req: Request, res: Response) => {
   try {
-    const { page, limit, type, status } = req.query as Record<string, string | undefined>
+    const { page, limit, type, status, phone, recipientName, dateFrom, dateTo } = req.query as Record<string, string | undefined>
     res.json(await svc.getLogs({
-      page:   page   ? Number(page)  : undefined,
-      limit:  limit  ? Number(limit) : undefined,
-      type:   type   || undefined,
-      status: status || undefined,
+      page:          page   ? Number(page)  : undefined,
+      limit:         limit  ? Number(limit) : undefined,
+      type:          type          || undefined,
+      status:        status        || undefined,
+      phone:         phone         || undefined,
+      recipientName: recipientName || undefined,
+      dateFrom:      dateFrom      || undefined,
+      dateTo:        dateTo        || undefined,
     }))
   } catch (e: any) { res.status(e.status || 500).json({ message: e.message }) }
 }

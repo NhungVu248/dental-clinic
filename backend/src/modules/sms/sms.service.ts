@@ -152,18 +152,36 @@ export const getStats = async () => {
 // ─── Logs ────────────────────────────────────────────────────
 
 export const getLogs = async (opts: {
-  page?:   number
-  limit?:  number
-  type?:   string
-  status?: string
+  page?:         number
+  limit?:        number
+  type?:         string
+  status?:       string
+  phone?:        string
+  recipientName?: string
+  dateFrom?:     string   // YYYY-MM-DD
+  dateTo?:       string   // YYYY-MM-DD
 }) => {
   const page  = Math.max(1, opts.page  ?? 1)
-  const limit = Math.min(50, opts.limit ?? 20)
+  const limit = Math.min(100, opts.limit ?? 20)
   const skip  = (page - 1) * limit
 
   const where: Record<string, unknown> = {}
   if (opts.type)   where.type   = opts.type
   if (opts.status) where.status = opts.status
+
+  if (opts.phone?.trim()) {
+    where.phone = { contains: opts.phone.replace(/\D/g, '') }
+  }
+  if (opts.recipientName?.trim()) {
+    where.recipientName = { contains: opts.recipientName.trim() }
+  }
+
+  if (opts.dateFrom || opts.dateTo) {
+    const createdAt: Record<string, Date> = {}
+    if (opts.dateFrom) createdAt.gte = new Date(opts.dateFrom + 'T00:00:00')
+    if (opts.dateTo)   createdAt.lte = new Date(opts.dateTo   + 'T23:59:59')
+    where.createdAt = createdAt
+  }
 
   const [logs, total] = await Promise.all([
     prisma.smsLog.findMany({ where, orderBy: { createdAt: 'desc' }, skip, take: limit }),
