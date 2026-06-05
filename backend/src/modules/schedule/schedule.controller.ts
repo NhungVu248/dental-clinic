@@ -43,3 +43,19 @@ export const deleteSchedule = async (req: Request, res: Response) => {
     res.json({ message: 'Hủy lịch trực thành công' })
   } catch (e: any) { res.status(e.status || 500).json({ message: e.message || 'Lỗi hệ thống' }) }
 }
+
+// ── Phân công hàng loạt ───────────────────────────────────────
+
+export const previewBatch = async (req: Request, res: Response) => {
+  try {
+    res.json(await svc.previewScheduleBatch(req.body))
+  } catch (e: any) { res.status(e.status || 500).json({ message: e.message || 'Lỗi hệ thống' }) }
+}
+
+export const createBatch = async (req: Request, res: Response) => {
+  try {
+    res.status(201).json(
+      await svc.createScheduleBatch(req.body, (req as any).user.id, getIp(req))
+    )
+  } catch (e: any) { res.status(e.status || 500).json({ message: e.message || 'Lỗi hệ thống' }) }
+}

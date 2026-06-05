@@ -2,9 +2,13 @@ import { useState, useEffect, useCallback } from 'react'
 import {
   Plus, ChevronLeft, ChevronRight, X, Loader2,
   AlertTriangle, Pencil, Trash2, UserRound, CalendarDays,
-  LayoutGrid, Users, Layers,
+  LayoutGrid, Users, Layers, CalendarRange, CheckCircle2, XCircle,
 } from 'lucide-react'
-import { scheduleApi, type ScheduleItem, type ScheduleInput, type FormDoctor, type HolidayInfo } from '../../api/schedules.api'
+import {
+  scheduleApi,
+  type ScheduleItem, type ScheduleInput, type FormDoctor, type HolidayInfo,
+  type BatchScheduleInput, type BatchPreviewResult, type BatchDayResult, type BatchCreateResult,
+} from '../../api/schedules.api'
 import type { WorkShift } from '../../api/shifts.api'
 
 // ─── Date helpers ─────────────────────────────────────────────
@@ -670,6 +674,480 @@ function EditScheduleModal({
   )
 }
 
+// ─── Batch Assign Modal – phân công nhiều ngày cùng lúc ──────
+
+const VN_DAY_FULL = ['Chủ nhật', 'Thứ 2', 'Thứ 3', 'Thứ 4', 'Thứ 5', 'Thứ 6', 'Thứ 7']
+
+function BatchAssignModal({
+  doctors, shifts, groups,
+  defaultWeekStart,
+  onSaved, onClose,
+}: {
+  doctors:          FormDoctor[]
+  shifts:           WorkShift[]
+  groups:           { id: number; name: string }[]
+  defaultWeekStart: Date
+  onSaved:          () => void
+  onClose:          () => void
+}) {
+  type Step = 'config' | 'preview' | 'result'
+  const [step,           setStep]           = useState<Step>('config')
+  const [doctorId,       setDoctorId]       = useState<number>(doctors[0]?.id ?? 0)
+  const [shiftId,        setShiftId]        = useState<number>(shifts[0]?.id ?? 0)
+  const [weekStart,      setWeekStart]      = useState<Date>(defaultWeekStart)
+  const [serviceGroupId, setServiceGroupId] = useState<number>(0)
+  const [note,           setNote]           = useState('')
+  const [isOverride,     setIsOverride]     = useState(false)
+  const [selectedDays,   setSelectedDays]   = useState<string[]>([])
+  const [loading,        setLoading]        = useState(false)
+  const [error,          setError]          = useState('')
+  const [previewResult,  setPreviewResult]  = useState<BatchPreviewResult | null>(null)
+  const [confirmedDates, setConfirmedDates] = useState<string[]>([])
+  const [batchResult,    setBatchResult]    = useState<BatchCreateResult | null>(null)
+
+  const weekDays       = Array.from({ length: 6 }, (_, i) => addDays(weekStart, i))
+  const selectedShift  = shifts.find(s => s.id === shiftId)
+  const selectedDoctor = doctors.find(d => d.id === doctorId)
+  const doctorGroups   = selectedDoctor?.groups ?? []
+
+  const isShiftAppliesToDay = (d: Date): boolean => {
+    if (!selectedShift) return false
+    return (selectedShift.applyDays as number[]).includes(jsToApplyDay(d.getDay()))
+  }
+
+  const toggleDay = (dateStr: string, dayDate: Date) => {
+    if (!isShiftAppliesToDay(dayDate)) return
+    setSelectedDays(prev =>
+      prev.includes(dateStr) ? prev.filter(d => d !== dateStr) : [...prev, dateStr]
+    )
+  }
+
+  const toggleAll = () => {
+    const applicable = weekDays.filter(d => isShiftAppliesToDay(d)).map(toDateStr)
+    const allChecked = applicable.every(d => selectedDays.includes(d))
+    setSelectedDays(prev =>
+      allChecked ? prev.filter(d => !applicable.includes(d)) : [...new Set([...prev, ...applicable])]
+    )
+  }
+
+  const inputStyle: React.CSSProperties = {
+    width: '100%', padding: '10px 12px', border: '1.5px solid #e5e7eb',
+    borderRadius: '8px', fontSize: '14px', outline: 'none', boxSizing: 'border-box', fontFamily: 'inherit',
+  }
+  const onFocus = (e: React.FocusEvent<any>) => (e.currentTarget.style.borderColor = '#3b82f6')
+  const onBlur  = (e: React.FocusEvent<any>) => (e.currentTarget.style.borderColor = '#e5e7eb')
+
+  const handlePreview = async () => {
+    if (!doctorId)              { setError('Vui lòng chọn bác sĩ'); return }
+    if (!shiftId)               { setError('Vui lòng chọn ca làm việc'); return }
+    if (!selectedDays.length)   { setError('Vui lòng chọn ít nhất 1 ngày'); return }
+    setLoading(true); setError('')
+    try {
+      const r = await scheduleApi.previewBatch({
+        doctorId, shiftId, workDates: selectedDays,
+        serviceGroupId: serviceGroupId || null, note: note.trim() || undefined, isOverride,
+      })
+      setPreviewResult(r.data)
+      setConfirmedDates(r.data.results.filter(x => x.valid).map(x => x.workDate))
+      setStep('preview')
+    } catch (e: any) {
+      setError(e.response?.data?.message || 'Không thể kiểm tra, vui lòng thử lại')
+    } finally { setLoading(false) }
+  }
+
+  const handleSave = async () => {
+    if (!confirmedDates.length) { setError('Không có ngày nào được chọn để lưu'); return }
+    setLoading(true); setError('')
+    try {
+      const r = await scheduleApi.createBatch({
+        doctorId, shiftId, workDates: selectedDays,
+        serviceGroupId: serviceGroupId || null, note: note.trim() || undefined, isOverride,
+        confirmedDates,
+      })
+      setBatchResult(r.data)
+      setStep('result')
+    } catch (e: any) {
+      setError(e.response?.data?.message || 'Lỗi khi lưu lịch trực')
+    } finally { setLoading(false) }
+  }
+
+  const toggleConfirm = (date: string, valid: boolean) => {
+    if (!valid) return
+    setConfirmedDates(prev =>
+      prev.includes(date) ? prev.filter(d => d !== date) : [...prev, date]
+    )
+  }
+
+  return (
+    <Overlay>
+      <div style={{
+        backgroundColor: 'white', borderRadius: '16px', width: '100%', maxWidth: '640px',
+        boxShadow: '0 20px 60px rgba(0,0,0,0.2)', maxHeight: '92vh',
+        display: 'flex', flexDirection: 'column',
+      }}>
+        {/* Header */}
+        <div style={{ padding: '20px 24px 0', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexShrink: 0 }}>
+          <div>
+            <h3 style={{ fontSize: '16px', fontWeight: 700, color: '#111827', margin: 0, display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <CalendarRange size={18} color="#7c3aed" />
+              {step === 'config'  ? 'Phân công nhiều ngày — Bước 1: Cấu hình'  : ''}
+              {step === 'preview' ? 'Phân công nhiều ngày — Bước 2: Xem trước' : ''}
+              {step === 'result'  ? 'Kết quả phân công hàng loạt'               : ''}
+            </h3>
+            <p style={{ fontSize: '12px', color: '#9ca3af', marginTop: '3px' }}>
+              {step === 'config'  && 'Chọn bác sĩ, ca làm việc và các ngày cần phân công'}
+              {step === 'preview' && 'Kiểm tra từng ngày. Bỏ chọn ngày lỗi để bỏ qua, hoặc quay lại sửa.'}
+              {step === 'result'  && `Đã lưu ${batchResult?.savedCount ?? 0} lịch trực${batchResult?.failedCount ? `, ${batchResult.failedCount} ngày thất bại` : ''}`}
+            </p>
+          </div>
+          <button onClick={onClose} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#9ca3af', padding: '4px', flexShrink: 0 }}>
+            <X size={18} />
+          </button>
+        </div>
+
+        {/* Body */}
+        <div style={{ overflow: 'auto', flex: 1, padding: '18px 24px' }}>
+          {error && <div style={{ marginBottom: '12px' }}><ErrorBanner msg={error} /></div>}
+
+          {/* ── Step 1: Config ── */}
+          {step === 'config' && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+
+              {/* Bác sĩ */}
+              <div>
+                <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, color: '#374151', marginBottom: '6px' }}>
+                  Bác sĩ <span style={{ color: '#ef4444' }}>*</span>
+                </label>
+                <select value={doctorId}
+                  onChange={e => { setDoctorId(Number(e.target.value)); setServiceGroupId(0) }}
+                  style={{ ...inputStyle, appearance: 'none', cursor: 'pointer' }}
+                  onFocus={onFocus} onBlur={onBlur}>
+                  <option value={0} disabled>-- Chọn bác sĩ --</option>
+                  {doctors.map(d => <option key={d.id} value={d.id}>BS. {d.fullName}</option>)}
+                </select>
+              </div>
+
+              {/* Ca làm việc */}
+              <div>
+                <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, color: '#374151', marginBottom: '6px' }}>
+                  Ca làm việc <span style={{ color: '#ef4444' }}>*</span>
+                </label>
+                <select value={shiftId}
+                  onChange={e => { setShiftId(Number(e.target.value)); setSelectedDays([]) }}
+                  style={{ ...inputStyle, appearance: 'none', cursor: 'pointer' }}
+                  onFocus={onFocus} onBlur={onBlur}>
+                  <option value={0} disabled>-- Chọn ca --</option>
+                  {shifts.map(s => <option key={s.id} value={s.id}>{s.name} ({s.startTime}–{s.endTime})</option>)}
+                </select>
+                {selectedShift && (
+                  <p style={{ fontSize: '11px', color: '#6b7280', marginTop: '4px' }}>
+                    Áp dụng: {(selectedShift.applyDays as number[])
+                      .map(d => ({0:'CN',2:'T2',3:'T3',4:'T4',5:'T5',6:'T6',7:'T7'} as Record<number,string>)[d] ?? '')
+                      .filter(Boolean).join(', ')}
+                  </p>
+                )}
+              </div>
+
+              {/* Nhóm dịch vụ */}
+              <div>
+                <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, color: '#374151', marginBottom: '6px' }}>
+                  Nhóm dịch vụ phụ trách
+                </label>
+                <select value={serviceGroupId} onChange={e => setServiceGroupId(Number(e.target.value))}
+                  style={{ ...inputStyle, appearance: 'none', cursor: 'pointer' }}
+                  onFocus={onFocus} onBlur={onBlur}>
+                  <option value={0}>-- Không chỉ định --</option>
+                  {(doctorGroups.length > 0 ? doctorGroups : groups).map(g => (
+                    <option key={g.id} value={g.id}>{g.name}</option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Điều hướng tuần */}
+              <div>
+                <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, color: '#374151', marginBottom: '6px' }}>
+                  Tuần áp dụng
+                </label>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                  <button onClick={() => { setWeekStart(addDays(weekStart, -7)); setSelectedDays([]) }}
+                    style={{ width: '32px', height: '32px', border: '1px solid #e5e7eb', borderRadius: '8px', background: 'white', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <ChevronLeft size={14} color="#6b7280" />
+                  </button>
+                  <span style={{ fontSize: '13px', fontWeight: 600, color: '#374151', flex: 1, textAlign: 'center' }}>
+                    {toDateStr(weekStart)} – {toDateStr(addDays(weekStart, 5))}
+                  </span>
+                  <button onClick={() => { setWeekStart(addDays(weekStart, 7)); setSelectedDays([]) }}
+                    style={{ width: '32px', height: '32px', border: '1px solid #e5e7eb', borderRadius: '8px', background: 'white', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <ChevronRight size={14} color="#6b7280" />
+                  </button>
+                </div>
+              </div>
+
+              {/* Chọn ngày */}
+              <div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                  <label style={{ fontSize: '13px', fontWeight: 600, color: '#374151' }}>
+                    Chọn ngày làm việc <span style={{ color: '#ef4444' }}>*</span>
+                  </label>
+                  <button onClick={toggleAll}
+                    style={{ fontSize: '12px', color: '#7c3aed', background: 'none', border: 'none', cursor: 'pointer', textDecoration: 'underline', padding: 0 }}>
+                    Chọn/bỏ tất cả
+                  </button>
+                </div>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '8px' }}>
+                  {weekDays.map(day => {
+                    const dateStr  = toDateStr(day)
+                    const applies  = isShiftAppliesToDay(day)
+                    const checked  = selectedDays.includes(dateStr)
+                    const isPast   = day < new Date(new Date().setHours(0,0,0,0))
+                    const disabled = !applies || (isPast && !isOverride)
+                    return (
+                      <label key={dateStr} style={{
+                        display: 'flex', alignItems: 'center', gap: '8px',
+                        padding: '9px 12px', borderRadius: '8px',
+                        cursor: disabled ? 'not-allowed' : 'pointer',
+                        border: `1.5px solid ${checked ? '#7c3aed' : disabled ? '#f3f4f6' : '#e5e7eb'}`,
+                        backgroundColor: checked ? '#f5f3ff' : disabled ? '#f9fafb' : 'white',
+                        opacity: disabled ? 0.5 : 1,
+                        transition: 'all 0.12s',
+                      }}>
+                        <input type="checkbox" checked={checked} disabled={disabled}
+                          onChange={() => toggleDay(dateStr, day)}
+                          style={{ width: '15px', height: '15px', accentColor: '#7c3aed', flexShrink: 0 }} />
+                        <div style={{ minWidth: 0 }}>
+                          <p style={{ fontSize: '13px', fontWeight: 600, color: checked ? '#6d28d9' : '#374151', margin: 0 }}>
+                            {VN_DAY[day.getDay()]} {fmtDate(day)}
+                          </p>
+                          {!applies && <p style={{ fontSize: '11px', color: '#9ca3af', margin: '1px 0 0' }}>Ca không áp dụng</p>}
+                          {applies && isPast && !isOverride && <p style={{ fontSize: '11px', color: '#9ca3af', margin: '1px 0 0' }}>Ngày đã qua</p>}
+                        </div>
+                      </label>
+                    )
+                  })}
+                </div>
+                {selectedDays.length > 0 && (
+                  <p style={{ fontSize: '12px', color: '#7c3aed', marginTop: '8px', fontWeight: 600 }}>
+                    ✓ Đã chọn {selectedDays.length} ngày
+                  </p>
+                )}
+              </div>
+
+              {/* Ghi chú */}
+              <div>
+                <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, color: '#374151', marginBottom: '6px' }}>
+                  Ghi chú (áp dụng cho tất cả ngày)
+                </label>
+                <textarea value={note} onChange={e => setNote(e.target.value)} rows={2}
+                  placeholder="Ghi chú thêm nếu có..."
+                  style={{ ...inputStyle, resize: 'vertical' }}
+                  onFocus={onFocus} onBlur={onBlur} />
+              </div>
+
+              {/* Override */}
+              <label style={{
+                display: 'flex', alignItems: 'flex-start', gap: '10px', cursor: 'pointer',
+                padding: '10px 12px', borderRadius: '8px',
+                backgroundColor: isOverride ? '#fff7ed' : '#f9fafb',
+                border: `1px solid ${isOverride ? '#fed7aa' : '#e5e7eb'}`,
+              }}>
+                <input type="checkbox" checked={isOverride}
+                  onChange={e => { setIsOverride(e.target.checked); setSelectedDays([]) }}
+                  style={{ width: '16px', height: '16px', marginTop: '2px', accentColor: '#ea580c', flexShrink: 0 }} />
+                <div>
+                  <p style={{ fontSize: '13px', fontWeight: 600, color: isOverride ? '#ea580c' : '#374151', margin: 0 }}>
+                    Phân công khẩn cấp
+                  </p>
+                  <p style={{ fontSize: '12px', color: '#9ca3af', marginTop: '2px' }}>
+                    Bỏ qua ràng buộc đăng ký trước 1 ngày. Ghi nhật ký đặc biệt.
+                  </p>
+                </div>
+              </label>
+            </div>
+          )}
+
+          {/* ── Step 2: Preview ── */}
+          {step === 'preview' && previewResult && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+              {/* Tóm tắt */}
+              <div style={{
+                display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px',
+                padding: '14px 16px', backgroundColor: '#f9fafb', borderRadius: '10px', border: '1px solid #e5e7eb',
+              }}>
+                <div>
+                  <p style={{ fontSize: '11px', color: '#6b7280', margin: '0 0 2px' }}>Bác sĩ</p>
+                  <p style={{ fontSize: '14px', fontWeight: 700, color: '#111827', margin: 0 }}>BS. {previewResult.doctorName}</p>
+                </div>
+                <div>
+                  <p style={{ fontSize: '11px', color: '#6b7280', margin: '0 0 2px' }}>Ca làm việc</p>
+                  <p style={{ fontSize: '14px', fontWeight: 700, color: '#111827', margin: 0 }}>{previewResult.shiftName}</p>
+                </div>
+                <div>
+                  <p style={{ fontSize: '12px', color: '#16a34a', fontWeight: 600, margin: 0 }}>✓ {previewResult.validCount} ngày hợp lệ</p>
+                </div>
+                {previewResult.errorCount > 0 && (
+                  <div>
+                    <p style={{ fontSize: '12px', color: '#dc2626', fontWeight: 600, margin: 0 }}>✗ {previewResult.errorCount} ngày có lỗi</p>
+                  </div>
+                )}
+              </div>
+
+              {previewResult.errorCount > 0 && (
+                <div style={{ backgroundColor: '#fef9c3', border: '1px solid #fde047', borderRadius: '8px', padding: '10px 14px', fontSize: '13px', color: '#854d0e' }}>
+                  Các ngày lỗi đã bị bỏ chọn. Bạn có thể quay lại điều chỉnh hoặc bỏ qua chúng.
+                </div>
+              )}
+
+              {/* Bảng xem trước */}
+              <div style={{ border: '1px solid #e5e7eb', borderRadius: '10px', overflow: 'hidden' }}>
+                <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px' }}>
+                  <thead>
+                    <tr style={{ backgroundColor: '#f9fafb' }}>
+                      {['Chọn', 'Ngày', 'Thứ', 'Kết quả kiểm tra'].map((h, i) => (
+                        <th key={h} style={{
+                          padding: '10px 14px', textAlign: 'left', fontWeight: 700, color: '#374151',
+                          borderBottom: '1px solid #e5e7eb', width: i === 0 ? '44px' : undefined,
+                        }}>{h}</th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {previewResult.results.map((r, idx) => {
+                      const d      = new Date(r.workDate + 'T12:00:00')
+                      const isSel  = confirmedDates.includes(r.workDate)
+                      return (
+                        <tr key={r.workDate}
+                          style={{ backgroundColor: idx % 2 === 0 ? 'white' : '#fafafa', cursor: r.valid ? 'pointer' : 'not-allowed' }}
+                          onClick={() => toggleConfirm(r.workDate, r.valid)}>
+                          <td style={{ padding: '10px 14px', borderBottom: '1px solid #f3f4f6' }}>
+                            <input type="checkbox" checked={isSel} disabled={!r.valid}
+                              onChange={() => toggleConfirm(r.workDate, r.valid)}
+                              style={{ width: '15px', height: '15px', accentColor: '#7c3aed' }} />
+                          </td>
+                          <td style={{ padding: '10px 14px', fontWeight: 600, color: '#111827', borderBottom: '1px solid #f3f4f6' }}>
+                            {r.workDate}
+                          </td>
+                          <td style={{ padding: '10px 14px', color: '#6b7280', borderBottom: '1px solid #f3f4f6' }}>
+                            {VN_DAY_FULL[d.getDay()]}
+                          </td>
+                          <td style={{ padding: '10px 14px', borderBottom: '1px solid #f3f4f6' }}>
+                            {r.valid
+                              ? <span style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', color: '#16a34a', fontWeight: 600 }}>
+                                  <CheckCircle2 size={14} /> Hợp lệ
+                                </span>
+                              : <span style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', color: '#dc2626', fontSize: '12px' }}>
+                                  <XCircle size={14} /> {r.error}
+                                </span>
+                            }
+                          </td>
+                        </tr>
+                      )
+                    })}
+                  </tbody>
+                </table>
+              </div>
+
+              <p style={{ fontSize: '13px', color: '#374151', margin: 0 }}>
+                Sẽ lưu <strong style={{ color: '#7c3aed' }}>{confirmedDates.length}</strong> ngày được chọn.
+              </p>
+            </div>
+          )}
+
+          {/* ── Step 3: Result ── */}
+          {step === 'result' && batchResult && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+              <div style={{
+                display: 'flex', alignItems: 'center', gap: '12px', padding: '16px', borderRadius: '10px',
+                backgroundColor: batchResult.savedCount > 0 ? '#f0fdf4' : '#fef2f2',
+                border: `1px solid ${batchResult.savedCount > 0 ? '#bbf7d0' : '#fca5a5'}`,
+              }}>
+                {batchResult.savedCount > 0
+                  ? <CheckCircle2 size={28} color="#16a34a" />
+                  : <XCircle size={28} color="#dc2626" />}
+                <div>
+                  <p style={{ fontSize: '15px', fontWeight: 700, color: batchResult.savedCount > 0 ? '#15803d' : '#dc2626', margin: 0 }}>
+                    {batchResult.savedCount > 0
+                      ? `Đã lưu thành công ${batchResult.savedCount} lịch trực`
+                      : 'Không lưu được lịch trực nào'}
+                  </p>
+                  {batchResult.failedCount > 0 && (
+                    <p style={{ fontSize: '13px', color: '#6b7280', marginTop: '4px' }}>
+                      {batchResult.failedCount} ngày thất bại
+                    </p>
+                  )}
+                </div>
+              </div>
+
+              {batchResult.created.length > 0 && (
+                <div>
+                  <p style={{ fontSize: '13px', fontWeight: 700, color: '#374151', margin: '0 0 8px' }}>Đã lưu:</p>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+                    {batchResult.created.map(s => (
+                      <span key={s.id} style={{ padding: '4px 10px', borderRadius: '6px', backgroundColor: '#dcfce7', color: '#15803d', fontSize: '12px', fontWeight: 600 }}>
+                        ✓ {s.workDate} — {s.shiftName}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {batchResult.errors.length > 0 && (
+                <div>
+                  <p style={{ fontSize: '13px', fontWeight: 700, color: '#374151', margin: '0 0 8px' }}>Không lưu được:</p>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                    {batchResult.errors.map(e => (
+                      <div key={e.workDate} style={{ padding: '6px 10px', borderRadius: '6px', backgroundColor: '#fef2f2', color: '#dc2626', fontSize: '12px' }}>
+                        ✗ {e.workDate} — {e.error}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+
+        {/* Footer */}
+        <div style={{ padding: '14px 24px', borderTop: '1px solid #f3f4f6', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexShrink: 0 }}>
+          <div>
+            {step === 'preview' && (
+              <button onClick={() => { setStep('config'); setError('') }}
+                style={{ ...btn.base, ...btn.ghost }}>
+                <ChevronLeft size={14} /> Quay lại
+              </button>
+            )}
+          </div>
+          <div style={{ display: 'flex', gap: '10px' }}>
+            {step === 'result' ? (
+              <button onClick={() => { onSaved(); onClose() }}
+                style={{ ...btn.base, ...btn.primary }}>
+                Đóng & Làm mới
+              </button>
+            ) : (
+              <>
+                <button onClick={onClose} style={{ ...btn.base, ...btn.ghost }}>Hủy</button>
+                {step === 'config' && (
+                  <button onClick={handlePreview} disabled={loading || !selectedDays.length}
+                    style={{ ...btn.base, backgroundColor: '#7c3aed', color: 'white', opacity: loading || !selectedDays.length ? 0.6 : 1 }}>
+                    {loading && <Loader2 size={14} style={{ animation: 'spin 1s linear infinite' }} />}
+                    Xem trước ({selectedDays.length} ngày)
+                  </button>
+                )}
+                {step === 'preview' && (
+                  <button onClick={handleSave} disabled={loading || !confirmedDates.length}
+                    style={{ ...btn.base, backgroundColor: '#7c3aed', color: 'white', opacity: loading || !confirmedDates.length ? 0.6 : 1 }}>
+                    {loading && <Loader2 size={14} style={{ animation: 'spin 1s linear infinite' }} />}
+                    Xác nhận lưu ({confirmedDates.length} ngày)
+                  </button>
+                )}
+              </>
+            )}
+          </div>
+        </div>
+      </div>
+    </Overlay>
+  )
+}
+
 // ─── By Doctor Tab ────────────────────────────────────────────
 
 function ByDoctorTab({ schedules, doctors, weekDays }: {
@@ -777,6 +1255,7 @@ export default function SchedulesPage() {
   const [loading,      setLoading]      = useState(true)
   const [view,         setView]         = useState<'overview' | 'doctor' | 'group'>('overview')
   const [addOpen,      setAddOpen]      = useState(false)
+  const [batchOpen,    setBatchOpen]    = useState(false)
   const [prefillDate,  setPrefillDate]  = useState<string | undefined>()
   const [prefillShift, setPrefillShift] = useState<number | undefined>()
   const [editTarget,   setEditTarget]   = useState<ScheduleItem | null>(null)
@@ -869,9 +1348,15 @@ export default function SchedulesPage() {
             Quản lý lịch trực của bác sĩ theo tuần và nhóm dịch vụ
           </p>
         </div>
-        <button onClick={() => openAdd()} style={{ ...btn.base, ...btn.primary }}>
-          <Plus size={15} /> Phân công lịch trực
-        </button>
+        <div style={{ display: 'flex', gap: '10px' }}>
+          <button onClick={() => setBatchOpen(true)}
+            style={{ ...btn.base, backgroundColor: '#7c3aed', color: 'white' }}>
+            <CalendarRange size={15} /> Phân công nhiều ngày
+          </button>
+          <button onClick={() => openAdd()} style={{ ...btn.base, ...btn.primary }}>
+            <Plus size={15} /> Phân công 1 ngày
+          </button>
+        </div>
       </div>
 
       {/* ── Week navigator ── */}
@@ -1110,6 +1595,14 @@ export default function SchedulesPage() {
           doctors={doctors} shifts={shifts} groups={groups}
           prefillDate={prefillDate} prefillShiftId={prefillShift}
           onSave={handleAdd} onClose={() => { setAddOpen(false); setPrefillDate(undefined); setPrefillShift(undefined) }}
+        />
+      )}
+      {batchOpen && (
+        <BatchAssignModal
+          doctors={doctors} shifts={shifts} groups={groups}
+          defaultWeekStart={weekStart}
+          onSaved={() => { showToast('Phân công hàng loạt thành công'); loadSchedules() }}
+          onClose={() => setBatchOpen(false)}
         />
       )}
       {editTarget && (

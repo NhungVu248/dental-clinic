@@ -350,3 +350,163 @@ export const deleteSchedule = async (
     adminId, ip
   )
 }
+
+// ════════════════════════════════════════════════════════════════
+// UC08 A4/A5/A6 – Phân công lịch trực hàng loạt nhiều ngày
+// ════════════════════════════════════════════════════════════════
+
+export type BatchScheduleInput = {
+  doctorId:        number
+  shiftId:         number
+  workDates:       string[]          // "YYYY-MM-DD"
+  serviceGroupId?: number | null
+  note?:           string
+  isOverride?:     boolean
+}
+
+export type BatchDayResult = {
+  workDate: string
+  valid:    boolean
+  error?:   string
+}
+
+type DoctorWithRoles = { fullName: string; roles: { role: { name: string } }[] }
+type ShiftBasic      = { name: string; applyDays: unknown; startTime: string; endTime: string }
+
+/** Validate 1 ngày trong batch — trả kết quả, không throw */
+async function validateOneDayForBatch(
+  opts: { doctorId: number; shiftId: number; workDate: string; isOverride?: boolean },
+  doctor: DoctorWithRoles,
+  shift:  ShiftBasic,
+): Promise<BatchDayResult> {
+  const workDate = parseDate(opts.workDate)
+  const today    = new Date(); today.setUTCHours(0, 0, 0, 0)
+  const tomorrow = new Date(today); tomorrow.setUTCDate(tomorrow.getUTCDate() + 1)
+
+  if (workDate < today)
+    return { workDate: opts.workDate, valid: false, error: 'Ngày đã qua' }
+
+  if (workDate < tomorrow && !opts.isOverride)
+    return { workDate: opts.workDate, valid: false, error: 'Phải đăng ký trước ít nhất 1 ngày (bật khẩn cấp để bỏ qua)' }
+
+  const applyDay  = jsToApplyDay(workDate.getUTCDay())
+  const shiftDays = shift.applyDays as number[]
+  if (!shiftDays.includes(applyDay))
+    return { workDate: opts.workDate, valid: false, error: `Ca "${shift.name}" không hoạt động vào ${VN_DAY[applyDay] ?? 'ngày này'}` }
+
+  const holidaysOnDay = await getHolidaysForDateRange(workDate, workDate)
+  for (const h of holidaysOnDay) {
+    if (isShiftBlockedByHoliday(shift.startTime, shift.endTime, h)) {
+      const timeInfo = (h.type !== 'NATIONAL' && h.startTime && h.endTime)
+        ? ` (${h.startTime}–${h.endTime})` : ''
+      return { workDate: opts.workDate, valid: false, error: `Ngày nghỉ "${h.name}"${timeInfo}` }
+    }
+  }
+
+  const dayEnd = new Date(workDate); dayEnd.setUTCDate(dayEnd.getUTCDate() + 1)
+  const sameDayCount = await prisma.doctorSchedule.count({
+    where: { doctorId: opts.doctorId, workDate: { gte: workDate, lt: dayEnd } },
+  })
+  if (sameDayCount >= 2)
+    return { workDate: opts.workDate, valid: false, error: `BS. ${doctor.fullName} đã có 2 ca trong ngày (tối đa 2 ca/ngày)` }
+
+  const dup = await prisma.doctorSchedule.findFirst({
+    where: { doctorId: opts.doctorId, shiftId: opts.shiftId, workDate },
+  })
+  if (dup)
+    return { workDate: opts.workDate, valid: false, error: `Đã tồn tại lịch trực ca này ngày ${opts.workDate}` }
+
+  return { workDate: opts.workDate, valid: true }
+}
+
+/** Xem trước — kiểm tra từng ngày, chưa lưu vào DB */
+export const previewScheduleBatch = async (data: BatchScheduleInput) => {
+  if (!data.workDates?.length)
+    throw { status: 400, message: 'Vui lòng chọn ít nhất 1 ngày' }
+
+  const [doctor, shift] = await Promise.all([
+    prisma.user.findUnique({ where: { id: data.doctorId }, include: { roles: { include: { role: true } } } }),
+    prisma.workShift.findUnique({ where: { id: data.shiftId } }),
+  ])
+  if (!doctor || !doctor.isActive)
+    throw { status: 404, message: 'Bác sĩ không tồn tại hoặc đã bị khóa' }
+  if (!doctor.roles.some(r => r.role.name === 'DOCTOR'))
+    throw { status: 400, message: 'Người dùng được chọn không phải bác sĩ' }
+  if (!shift || !shift.isActive)
+    throw { status: 404, message: 'Ca làm việc không tồn tại hoặc đã tắt' }
+
+  const results: BatchDayResult[] = []
+  for (const workDate of data.workDates) {
+    results.push(await validateOneDayForBatch(
+      { doctorId: data.doctorId, shiftId: data.shiftId, workDate, isOverride: data.isOverride },
+      doctor, shift,
+    ))
+  }
+  return {
+    doctorName: doctor.fullName,
+    shiftName:  shift.name,
+    results,
+    validCount: results.filter(r => r.valid).length,
+    errorCount: results.filter(r => !r.valid).length,
+  }
+}
+
+/** Lưu hàng loạt sau khi Admin xác nhận bảng xem trước */
+export const createScheduleBatch = async (
+  data: BatchScheduleInput & { confirmedDates: string[] },
+  adminId: number,
+  ip: string,
+) => {
+  if (!data.confirmedDates?.length)
+    throw { status: 400, message: 'Không có ngày nào được xác nhận để lưu' }
+
+  const [doctor, shift] = await Promise.all([
+    prisma.user.findUnique({ where: { id: data.doctorId }, include: { roles: { include: { role: true } } } }),
+    prisma.workShift.findUnique({ where: { id: data.shiftId } }),
+  ])
+  if (!doctor || !doctor.isActive)
+    throw { status: 404, message: 'Bác sĩ không tồn tại hoặc đã bị khóa' }
+  if (!doctor.roles.some(r => r.role.name === 'DOCTOR'))
+    throw { status: 400, message: 'Người dùng được chọn không phải bác sĩ' }
+  if (!shift || !shift.isActive)
+    throw { status: 404, message: 'Ca làm việc không tồn tại hoặc đã tắt' }
+
+  const created: ReturnType<typeof formatSchedule>[] = []
+  const errors:  BatchDayResult[] = []
+
+  for (const workDate of data.confirmedDates) {
+    // Tái validate tại thời điểm lưu để chống race condition
+    const v = await validateOneDayForBatch(
+      { doctorId: data.doctorId, shiftId: data.shiftId, workDate, isOverride: data.isOverride },
+      doctor, shift,
+    )
+    if (!v.valid) { errors.push(v); continue }
+
+    try {
+      const schedule = await prisma.doctorSchedule.create({
+        data: {
+          doctorId:       data.doctorId,
+          shiftId:        data.shiftId,
+          workDate:       parseDate(workDate),
+          serviceGroupId: data.serviceGroupId ?? null,
+          note:           data.note?.trim() || null,
+          isOverride:     data.isOverride ?? false,
+          createdBy:      adminId,
+        },
+        include: INCLUDE,
+      })
+      created.push(formatSchedule(schedule))
+    } catch {
+      errors.push({ workDate, valid: false, error: 'Lỗi khi lưu, vui lòng thử lại' })
+    }
+  }
+
+  if (created.length > 0) {
+    await logAction(
+      'CREATE_SCHEDULE_BATCH',
+      `Phân công hàng loạt BS. ${doctor.fullName}: ${shift.name} — ${created.length} ngày (${created.map(s => s.workDate).join(', ')})${data.isOverride ? ' [OVERRIDE]' : ''}`,
+      adminId, ip,
+    )
+  }
+  return { created, errors, savedCount: created.length, failedCount: errors.length }
+}

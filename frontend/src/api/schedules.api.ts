@@ -59,10 +59,46 @@ export type ScheduleInput = {
   isOverride?:     boolean
 }
 
+// ── Phân công hàng loạt ───────────────────────────────────────
+
+export interface BatchScheduleInput {
+  doctorId:        number
+  shiftId:         number
+  workDates:       string[]
+  serviceGroupId?: number | null
+  note?:           string
+  isOverride?:     boolean
+}
+
+export interface BatchDayResult {
+  workDate: string
+  valid:    boolean
+  error?:   string
+}
+
+export interface BatchPreviewResult {
+  doctorName:  string
+  shiftName:   string
+  results:     BatchDayResult[]
+  validCount:  number
+  errorCount:  number
+}
+
+export interface BatchCreateResult {
+  created:     ScheduleItem[]
+  errors:      BatchDayResult[]
+  savedCount:  number
+  failedCount: number
+}
+
 export const scheduleApi = {
-  getWeek:   (weekStart: string)                   => api.get<WeekData>('/schedules', { params: { weekStart } }),
-  getFormData: ()                                  => api.get<FormData>('/schedules/form-data'),
-  create:    (data: ScheduleInput)                 => api.post<ScheduleItem>('/schedules', data),
-  update:    (id: number, data: Partial<ScheduleInput & { isOverride: boolean }>) => api.put(`/schedules/${id}`, data),
-  delete:    (id: number, isOverride?: boolean)    => api.delete(`/schedules/${id}`, { data: { isOverride } }),
+  getWeek:      (weekStart: string)                => api.get<WeekData>('/schedules', { params: { weekStart } }),
+  getFormData:  ()                                 => api.get<FormData>('/schedules/form-data'),
+  create:       (data: ScheduleInput)              => api.post<ScheduleItem>('/schedules', data),
+  update:       (id: number, data: Partial<ScheduleInput & { isOverride: boolean }>) => api.put(`/schedules/${id}`, data),
+  delete:       (id: number, isOverride?: boolean) => api.delete(`/schedules/${id}`, { data: { isOverride } }),
+  // Phân công hàng loạt nhiều ngày
+  previewBatch: (data: BatchScheduleInput)         => api.post<BatchPreviewResult>('/schedules/batch/preview', data),
+  createBatch:  (data: BatchScheduleInput & { confirmedDates: string[] }) =>
+    api.post<BatchCreateResult>('/schedules/batch', data),
 }
