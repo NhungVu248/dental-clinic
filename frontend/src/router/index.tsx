@@ -32,6 +32,9 @@ import StaffPlaceholderPage      from '../pages/staff/StaffPlaceholderPage'
 import DoctorMySchedulePage      from '../pages/staff/DoctorMySchedulePage'
 import TodaySchedulePage         from '../pages/staff/TodaySchedulePage'
 import StaffSmsPage             from '../pages/staff/StaffSmsPage'
+import PatientListPage          from '../pages/patients/PatientListPage'
+import NewPatientPage           from '../pages/patients/NewPatientPage'
+import PatientDetailPage        from '../pages/patients/PatientDetailPage'
 
 // ─── Route guards ─────────────────────────────────────────────
 
@@ -89,9 +92,13 @@ export default function AppRouter() {
           <Route path="/staff/holidays"         element={<StaffPlaceholderPage />} />
           <Route path="/staff/sms"              element={<StaffSmsPage />} />
 
+          {/* Bệnh nhân (CN3.1 – CN3.3) */}
+          <Route path="/staff/patients"         element={<PatientListPage />} />
+          <Route path="/staff/patients/new"     element={<NewPatientPage />} />
+          <Route path="/staff/patients/:id"     element={<PatientDetailPage />} />
+
           {/* Bác sĩ */}
           <Route path="/staff/today-schedule"   element={<TodaySchedulePage />} />
-          <Route path="/staff/patients"         element={<StaffPlaceholderPage />} />
           <Route path="/staff/my-schedule"      element={<DoctorMySchedulePage />} />
 
           {/* Kế toán */}

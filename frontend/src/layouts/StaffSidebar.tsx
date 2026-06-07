@@ -7,6 +7,7 @@ import {
   CalendarPlus,
   CalendarRange,
   MessageSquare,
+  Users,
   ChevronRight,
   ChevronLeft,
   ChevronDown,
@@ -27,6 +28,13 @@ const RECEPTIONIST_MENU = [
     section: 'TỔNG QUAN',
     items: [
       { label: 'Bảng điều khiển', icon: LayoutDashboard, path: '/staff/dashboard' },
+    ],
+  },
+  {
+    section: 'BỆNH NHÂN',
+    items: [
+      { label: 'Danh sách bệnh nhân', icon: Users,        path: '/staff/patients' },
+      { label: 'Đăng ký bệnh nhân',  icon: CalendarPlus, path: '/staff/patients/new' },
     ],
   },
   {
