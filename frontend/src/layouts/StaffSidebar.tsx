@@ -17,7 +17,10 @@ import {
   Clock,
   FileText,
   BarChart3,
+  BarChart2,
+  TrendingUp,
   ClipboardList,
+  RefreshCw,
 } from 'lucide-react'
 import { useAuthStore } from '../stores/auth.store'
 
@@ -28,6 +31,12 @@ const RECEPTIONIST_MENU = [
     section: 'TỔNG QUAN',
     items: [
       { label: 'Bảng điều khiển', icon: LayoutDashboard, path: '/staff/dashboard' },
+    ],
+  },
+  {
+    section: 'TIẾP ĐÓN',
+    items: [
+      { label: 'Hàng chờ hôm nay', icon: ClipboardList, path: '/staff/reception' },
     ],
   },
   {
@@ -66,6 +75,12 @@ const DOCTOR_MENU = [
     ],
   },
   {
+    section: 'KHÁM BỆNH',
+    items: [
+      { label: 'Khám & Điều trị', icon: HeartPulse,    path: '/staff/treatment' },
+    ],
+  },
+  {
     section: 'LỊCH KHÁM',
     items: [
       { label: 'Lịch khám hôm nay',   icon: CalendarDays,  path: '/staff/today-schedule' },
@@ -78,20 +93,31 @@ const DOCTOR_MENU = [
       { label: 'Lịch trực của tôi', icon: Clock, path: '/staff/my-schedule' },
     ],
   },
+  {
+    section: 'LƯƠNG',
+    items: [
+      { label: 'Hệ số ca phức tạp', icon: RefreshCw, path: '/staff/salary/uc4.3' },
+    ],
+  },
 ]
 
 const ACCOUNTANT_MENU = [
   {
-    section: 'TỔNG QUAN',
+    section: '',
     items: [
-      { label: 'Bảng điều khiển', icon: LayoutDashboard, path: '/staff/dashboard' },
+      { label: 'Lịch hẹn',  icon: CalendarDays, path: '/staff/appointments' },
+      { label: 'Bệnh nhân', icon: Users,         path: '/staff/patients' },
+      { label: 'Hóa đơn',   icon: FileText,      path: '/staff/invoices' },
+      { label: 'Thống kê',  icon: BarChart3,     path: '/staff/stats' },
     ],
   },
   {
-    section: 'TÀI CHÍNH',
+    section: 'LƯƠNG',
     items: [
-      { label: 'Hóa đơn & Thanh toán', icon: FileText,   path: '/staff/invoices' },
-      { label: 'Báo cáo doanh thu',    icon: BarChart3,  path: '/staff/reports' },
+      { label: 'Lập phiếu lương',      icon: FileText,   path: '/staff/salary/uc4.4' },
+      { label: 'Báo cáo lương tháng',  icon: BarChart2,  path: '/staff/salary/uc4.5' },
+      { label: 'Lương năm (1 nhân sự)', icon: TrendingUp, path: '/staff/salary/uc4.6' },
+      { label: 'Lương năm (toàn bộ)',   icon: BarChart3,  path: '/staff/salary/uc4.7' },
     ],
   },
 ]

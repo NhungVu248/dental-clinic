@@ -277,20 +277,37 @@ const SHIFT_COLORS: Record<string, string> = {
 // ─── Weekly timeline for a doctor ────────────────────────────
 
 function WeekTimeline({
-  weekDays, selectedDate, selectedShiftId,
+  weekDays, selectedDate, selectedShiftId, selectedSlot,
   onSelectSlot,
   anyDoctor,
 }: {
   weekDays: TimelineDay[]
   selectedDate: string | null
   selectedShiftId: number | null
+  selectedSlot: string | null
   onSelectSlot: (date: string, shift: TimelineShift, time: string) => void
   anyDoctor: boolean
 }) {
-  const [openDay, setOpenDay] = useState<string | null>(selectedDate)
+  // Auto-open: use selectedDate if set, otherwise open first non-past day with available slots
+  const autoOpenDay = selectedDate ?? weekDays.find(d => {
+    if (d.isPast) return false
+    return d.shifts.some(s => s.freeCount > 0) || d.unscheduledShifts.length > 0
+  })?.date ?? null
 
-  // Reset open day if week changes
-  useEffect(() => { setOpenDay(selectedDate) }, [selectedDate])
+  const [openDay, setOpenDay] = useState<string | null>(autoOpenDay)
+
+  // When week changes (weekDays updates), re-compute auto-open
+  useEffect(() => {
+    if (selectedDate) {
+      setOpenDay(selectedDate)
+    } else {
+      const first = weekDays.find(d => {
+        if (d.isPast) return false
+        return d.shifts.some(s => s.freeCount > 0) || d.unscheduledShifts.length > 0
+      })?.date ?? null
+      setOpenDay(first)
+    }
+  }, [weekDays, selectedDate])
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
@@ -386,23 +403,35 @@ function WeekTimeline({
                 ) : (
                   <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
                     {sh.slots.map(slot => {
-                      const isSel = selectedDate === openDay && selectedShiftId === sh.shiftId
-                      // Find if this specific time is selected (passed from parent via selectedSlot)
+                      // Slot được chọn: phải khớp đúng ngày + ca + giờ
+                      const isThisSlotSelected =
+                        selectedDate === openDay &&
+                        selectedShiftId === sh.shiftId &&
+                        selectedSlot === slot.time
                       return (
                         <button
                           key={slot.time}
-                          onClick={() => slot.available && onSelectSlot(openDay, sh, slot.time)}
+                          onClick={() => slot.available && onSelectSlot(openDay!, sh, slot.time)}
                           disabled={!slot.available}
-                          title={slot.patientName ? `Đã đặt: ${slot.patientName}` : undefined}
+                          title={slot.patientName ? `Đã đặt: ${slot.patientName}` : `Chọn ${slot.time}`}
                           style={{
                             minWidth: '68px', padding: '7px 8px', borderRadius: '8px', textAlign: 'center',
-                            border: `1.5px solid ${!slot.available ? '#e5e7eb' : (isSel ? '#2563eb' : '#d1fae5')}`,
-                            backgroundColor: !slot.available ? '#f9fafb' : '#f0fdf4',
+                            border: `1.5px solid ${
+                              !slot.available      ? '#e5e7eb'
+                              : isThisSlotSelected ? '#2563eb'
+                              : '#d1fae5'
+                            }`,
+                            backgroundColor: !slot.available      ? '#f9fafb'
+                                           : isThisSlotSelected ? '#dbeafe'
+                                           : '#f0fdf4',
                             cursor: slot.available ? 'pointer' : 'not-allowed',
                             opacity: !slot.available ? 0.5 : 1,
+                            transform: isThisSlotSelected ? 'scale(1.04)' : 'none',
+                            transition: 'all 0.12s',
                           }}
                         >
-                          <p style={{ fontSize: '12px', fontWeight: 700, margin: 0, color: !slot.available ? '#9ca3af' : '#111827' }}>{slot.time}</p>
+                          <p style={{ fontSize: '12px', fontWeight: isThisSlotSelected ? 800 : 700, margin: 0, color: !slot.available ? '#9ca3af' : isThisSlotSelected ? '#1d4ed8' : '#111827' }}>{slot.time}</p>
+                          {isThisSlotSelected && <p style={{ fontSize: '9px', margin: '2px 0 0', color: '#2563eb', fontWeight: 700 }}>✓</p>}
                           {slot.patientName && <p style={{ fontSize: '9px', margin: '1px 0 0', color: '#9ca3af', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '64px' }}>{slot.patientName}</p>}
                         </button>
                       )
@@ -604,10 +633,21 @@ function Step3({
               weekDays={timeline}
               selectedDate={selectedDate}
               selectedShiftId={selectedShiftId}
+              selectedSlot={selectedSlot}
               onSelectSlot={onSelectSlot}
               anyDoctor={anyDoctor}
             />
           )}
+        </div>
+      )}
+
+      {/* Hint: guide user to pick date+time if doctor selected but no slot yet */}
+      {selectedDoctor && !selectedSlot && !timelineLoading && (
+        <div style={{ padding: '11px 16px', backgroundColor: '#fffbeb', border: '1px solid #fde68a', borderRadius: '10px', display: 'flex', alignItems: 'center', gap: '10px' }}>
+          <CalendarDays size={15} color="#d97706" style={{ flexShrink: 0 }} />
+          <p style={{ fontSize: '13px', color: '#92400e', margin: 0, fontWeight: 500 }}>
+            Vui lòng chọn <strong>ngày</strong> và <strong>giờ khám</strong> trong lịch bên trên để tiếp tục
+          </p>
         </div>
       )}
 
@@ -617,7 +657,7 @@ function Step3({
           <CheckCircle2 size={16} color="#16a34a" />
           <p style={{ fontSize: '13px', color: '#166534', margin: 0 }}>
             Đã chọn: <strong>BS. {doctors.find(d => d.id === selectedDoctor)?.name}</strong> —{' '}
-            <strong>{new Date(selectedDate).toLocaleDateString('vi-VN', { weekday: 'long', day: 'numeric', month: 'numeric', year: 'numeric' })}</strong>{' '}
+            <strong>{new Date(selectedDate + 'T12:00:00').toLocaleDateString('vi-VN', { weekday: 'long', day: 'numeric', month: 'numeric', year: 'numeric' })}</strong>{' '}
             lúc <strong>{selectedSlot}</strong>
           </p>
           <button onClick={() => onSelectSlot('', {} as TimelineShift, '')}

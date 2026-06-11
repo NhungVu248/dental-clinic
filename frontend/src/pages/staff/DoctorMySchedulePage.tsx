@@ -68,9 +68,10 @@ const navBtnStyle: React.CSSProperties = {
 // Status pill for a shift
 function StatusPill({ status }: { status: string }) {
   const map: Record<string, { label: string; bg: string; color: string }> = {
-    FREE:  { label: 'Còn chỗ',  bg: '#f0fdf4', color: '#16a34a' },
-    BUSY:  { label: 'Đang đặt', bg: '#fffbeb', color: '#d97706' },
-    FULL:  { label: 'Đầy',      bg: '#fef2f2', color: '#dc2626' },
+    FREE:    { label: 'Còn chỗ',   bg: '#f0fdf4', color: '#16a34a' },
+    BUSY:    { label: 'Đang đặt',  bg: '#fffbeb', color: '#d97706' },
+    FULL:    { label: 'Đầy',       bg: '#fef2f2', color: '#dc2626' },
+    VISITED: { label: 'Đã khám',   bg: '#f0fdf4', color: '#059669' },
   }
   const s = map[status] ?? { label: status, bg: '#f3f4f6', color: '#6b7280' }
   return (
@@ -223,8 +224,18 @@ function MyShiftCard({ shift }: { shift: MyShift }) {
       {/* Fill bar */}
       <FillBar booked={shift.bookedCount} max={shift.maxPatients} color={shift.colorCode} />
 
+      {/* Bệnh nhân đã đến thực tế */}
+      {shift.visitedCount > 0 && (
+        <div style={{ marginTop: '4px', display: 'flex', alignItems: 'center', gap: '4px' }}>
+          <Users size={10} color="#059669" />
+          <span style={{ fontSize: '10px', color: '#059669', fontWeight: 600 }}>
+            {shift.visitedCount} bệnh nhân đã đến
+          </span>
+        </div>
+      )}
+
       {/* Free slots */}
-      <div style={{ marginTop: '5px', display: 'flex', alignItems: 'center', gap: '4px' }}>
+      <div style={{ marginTop: '4px', display: 'flex', alignItems: 'center', gap: '4px' }}>
         <CheckCircle2 size={10} color="#16a34a" />
         <span style={{ fontSize: '10px', color: '#16a34a', fontWeight: 600 }}>
           Còn {shift.freeCount} slot trống
@@ -299,12 +310,17 @@ function MyDayCard({ day }: { day: MyScheduleDay }) {
               borderTop: '1px dashed #f3f4f6',
             }}>
               <div style={{ flex: 1, textAlign: 'center' }}>
-                <p style={{ fontSize: '16px', fontWeight: 700, color: '#111827' }}>{day.totalBooked}</p>
+                <p style={{ fontSize: '15px', fontWeight: 700, color: '#111827' }}>{day.totalBooked}</p>
                 <p style={{ fontSize: '9px', color: '#9ca3af' }}>Lịch hẹn</p>
               </div>
               <div style={{ width: '1px', backgroundColor: '#f3f4f6' }} />
               <div style={{ flex: 1, textAlign: 'center' }}>
-                <p style={{ fontSize: '16px', fontWeight: 700, color: '#16a34a' }}>{day.totalFree}</p>
+                <p style={{ fontSize: '15px', fontWeight: 700, color: '#059669' }}>{day.totalVisited}</p>
+                <p style={{ fontSize: '9px', color: '#9ca3af' }}>Đã đến</p>
+              </div>
+              <div style={{ width: '1px', backgroundColor: '#f3f4f6' }} />
+              <div style={{ flex: 1, textAlign: 'center' }}>
+                <p style={{ fontSize: '15px', fontWeight: 700, color: '#16a34a' }}>{day.totalFree}</p>
                 <p style={{ fontSize: '9px', color: '#9ca3af' }}>Slot trống</p>
               </div>
             </div>
@@ -326,10 +342,10 @@ function MyScheduleTab({ data, loading }: { data: MyScheduleData | null; loading
       {/* Stats */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '14px' }}>
         {[
-          { icon: Calendar,    label: 'Ca trực trong tuần',   value: data.weekStats.totalShifts,  color: '#3b82f6', bg: '#eff6ff' },
-          { icon: Users,       label: 'Lịch hẹn trong tuần',  value: data.weekStats.totalBooked,  color: '#f97316', bg: '#fff7ed' },
-          { icon: CheckCircle2,label: 'Slot trống còn lại',   value: data.weekStats.totalFree,    color: '#22c55e', bg: '#f0fdf4' },
-          { icon: Star,        label: 'Nhóm dịch vụ',         value: data.serviceGroups.length,   color: '#8b5cf6', bg: '#f5f3ff' },
+          { icon: Calendar,    label: 'Ca trực trong tuần',      value: data.weekStats.totalShifts,   color: '#3b82f6', bg: '#eff6ff' },
+          { icon: Users,       label: 'Bệnh nhân đã đến',        value: data.weekStats.totalVisited,  color: '#059669', bg: '#ecfdf5' },
+          { icon: CheckCircle2,label: 'Lịch hẹn đặt trước',     value: data.weekStats.totalBooked,   color: '#f97316', bg: '#fff7ed' },
+          { icon: Star,        label: 'Slot trống còn lại',      value: data.weekStats.totalFree,     color: '#22c55e', bg: '#f0fdf4' },
         ].map(s => (
           <div key={s.label} style={{
             backgroundColor: 'white', borderRadius: '10px', padding: '14px 16px',

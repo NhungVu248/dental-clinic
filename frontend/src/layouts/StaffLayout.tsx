@@ -25,6 +25,11 @@ const pageTitles: Record<string, { title: string; subtitle?: string }> = {
   // Kế toán
   '/staff/invoices':          { title: 'Hóa đơn & Thanh toán',   subtitle: 'Quản lý hóa đơn và xử lý thanh toán bệnh nhân.' },
   '/staff/reports':           { title: 'Báo cáo doanh thu',      subtitle: 'Thống kê và xuất báo cáo tài chính theo kỳ.' },
+  '/staff/salary/uc4.3':      { title: 'Hệ số ca phức tạp',              subtitle: 'Đề xuất hệ số mức độ khó cho ca bệnh nhân phức tạp trong ca trực (UC4.3).' },
+  '/staff/salary/uc4.4':      { title: 'Lập phiếu lương tháng',          subtitle: 'Tạo và xác nhận phiếu lương hàng tháng cho toàn bộ nhân sự (UC4.4).' },
+  '/staff/salary/uc4.5':      { title: 'Báo cáo lương tháng',            subtitle: 'Tổng hợp quỹ lương tất cả nhân sự trong tháng (UC4.5).' },
+  '/staff/salary/uc4.6':      { title: 'Lương năm – 1 nhân sự',          subtitle: 'Tra cứu diễn biến lương 12 tháng của một nhân sự (UC4.6).' },
+  '/staff/salary/uc4.7':      { title: 'Báo cáo quỹ lương năm',          subtitle: 'Tổng hợp quỹ lương toàn bộ nhân sự cả năm (UC4.7).' },
 }
 
 export default function StaffLayout() {

@@ -1,7 +1,8 @@
 import { useEffect, useState, useCallback } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { Navigate, useNavigate } from 'react-router-dom'
 import { CalendarDays, Clock, CheckCircle2, Users, RefreshCw, Loader2, TrendingUp, TrendingDown } from 'lucide-react'
 import { receptionistApi, type DashboardData } from '../../api/receptionist.api'
+import { useAuthStore } from '../../stores/auth.store'
 
 // ─── Helpers ─────────────────────────────────────────────────
 
@@ -198,7 +199,8 @@ function StatusBadge({ status }: { status: string }) {
 // ════════════════════════════════════════════════════════════
 
 export default function StaffDashboardPage() {
-  const navigate = useNavigate()
+  const navigate       = useNavigate()
+  const { activeRole } = useAuthStore()
   const [data,    setData]    = useState<DashboardData | null>(null)
   const [loading, setLoading] = useState(true)
   const [error,   setError]   = useState('')
@@ -216,6 +218,11 @@ export default function StaffDashboardPage() {
   }, [])
 
   useEffect(() => { load() }, [load])
+
+  // Kế toán dùng trang Thống kê làm bảng điều khiển chính
+  if (activeRole === 'ACCOUNTANT') {
+    return <Navigate to="/staff/stats" replace />
+  }
 
   // Format date header
   const dateStr = new Date().toLocaleDateString('vi-VN', {

@@ -1,0 +1,615 @@
+
+> backend@1.0.0 dev
+> nodemon src/index.ts
+
+[33m[nodemon] 3.1.14[39m
+[33m[nodemon] to restart at any time, enter `rs`[39m
+[33m[nodemon] watching path(s): src\**\*[39m
+[33m[nodemon] watching extensions: ts,json[39m
+[32m[nodemon] starting `ts-node src/index.ts src/index.ts`[39m
+◇ injected env (0) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+🚀 Server running on http://localhost:5000
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] starting `ts-node src/index.ts src/index.ts`[39m
+◇ injected env (0) from .env // tip: ⌁ auth for agents [www.vestauth.com]
+🚀 Server running on http://localhost:5000
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] starting `ts-node src/index.ts src/index.ts`[39m
+◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
+🚀 Server running on http://localhost:5000
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] starting `ts-node src/index.ts src/index.ts`[39m
+◇ injected env (0) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+🚀 Server running on http://localhost:5000
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] starting `ts-node src/index.ts src/index.ts`[39m
+◇ injected env (0) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+🚀 Server running on http://localhost:5000
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] starting `ts-node src/index.ts src/index.ts`[39m
+◇ injected env (0) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+🚀 Server running on http://localhost:5000
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] starting `ts-node src/index.ts src/index.ts`[39m
+◇ injected env (0) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+🚀 Server running on http://localhost:5000
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] starting `ts-node src/index.ts src/index.ts`[39m
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] starting `ts-node src/index.ts src/index.ts`[39m
+◇ injected env (0) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+🚀 Server running on http://localhost:5000
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] starting `ts-node src/index.ts src/index.ts`[39m
+◇ injected env (0) from .env // tip: ⌁ auth for agents [www.vestauth.com]
+🚀 Server running on http://localhost:5000
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] starting `ts-node src/index.ts src/index.ts`[39m
+◇ injected env (0) from .env // tip: ⌘ enable debugging { debug: true }
+🚀 Server running on http://localhost:5000
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] starting `ts-node src/index.ts src/index.ts`[39m
+◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
+🚀 Server running on http://localhost:5000
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] starting `ts-node src/index.ts src/index.ts`[39m
+◇ injected env (0) from .env // tip: ⌁ auth for agents [www.vestauth.com]
+🚀 Server running on http://localhost:5000
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] starting `ts-node src/index.ts src/index.ts`[39m
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] starting `ts-node src/index.ts src/index.ts`[39m
+◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+🚀 Server running on http://localhost:5000
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] starting `ts-node src/index.ts src/index.ts`[39m
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] starting `ts-node src/index.ts src/index.ts`[39m
+◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
+🚀 Server running on http://localhost:5000
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] starting `ts-node src/index.ts src/index.ts`[39m
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] starting `ts-node src/index.ts src/index.ts`[39m
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] starting `ts-node src/index.ts src/index.ts`[39m
+◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
+🚀 Server running on http://localhost:5000
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] starting `ts-node src/index.ts src/index.ts`[39m
+◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+🚀 Server running on http://localhost:5000
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] starting `ts-node src/index.ts src/index.ts`[39m
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] starting `ts-node src/index.ts src/index.ts`[39m
+◇ injected env (0) from .env // tip: ⌁ auth for agents [www.vestauth.com]
+🚀 Server running on http://localhost:5000
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] starting `ts-node src/index.ts src/index.ts`[39m
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] starting `ts-node src/index.ts src/index.ts`[39m
+◇ injected env (0) from .env // tip: ⌁ auth for agents [www.vestauth.com]
+🚀 Server running on http://localhost:5000
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] starting `ts-node src/index.ts src/index.ts`[39m
+◇ injected env (0) from .env // tip: ⌁ auth for agents [www.vestauth.com]
+🚀 Server running on http://localhost:5000
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] starting `ts-node src/index.ts src/index.ts`[39m
+◇ injected env (0) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+🚀 Server running on http://localhost:5000
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] starting `ts-node src/index.ts src/index.ts`[39m
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] starting `ts-node src/index.ts src/index.ts`[39m
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] starting `ts-node src/index.ts src/index.ts`[39m
+◇ injected env (0) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+🚀 Server running on http://localhost:5000
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] starting `ts-node src/index.ts src/index.ts`[39m
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] starting `ts-node src/index.ts src/index.ts`[39m
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] starting `ts-node src/index.ts src/index.ts`[39m
+◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+🚀 Server running on http://localhost:5000
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] starting `ts-node src/index.ts src/index.ts`[39m
+C:\Users\admin\project\dental-clinic\backend\node_modules\ts-node\src\index.ts:859
+    return new TSError(diagnosticText, diagnosticCodes, diagnostics);
+           ^
+TSError: ⨯ Unable to compile TypeScript:
+src/modules/salary/salary.service.ts(517,35): error TS2339: Property '$raw' does not exist on type 'PrismaClient<PrismaClientOptions, never, DefaultArgs>'.
+
+    at createTSError (C:\Users\admin\project\dental-clinic\backend\node_modules\ts-node\src\index.ts:859:12)
+    at reportTSError (C:\Users\admin\project\dental-clinic\backend\node_modules\ts-node\src\index.ts:863:19)
+    at getOutput (C:\Users\admin\project\dental-clinic\backend\node_modules\ts-node\src\index.ts:1077:36)
+    at Object.compile (C:\Users\admin\project\dental-clinic\backend\node_modules\ts-node\src\index.ts:1433:41)
+    at Module.m._compile (C:\Users\admin\project\dental-clinic\backend\node_modules\ts-node\src\index.ts:1617:30)
+    at node:internal/modules/cjs/loader:1961:10
+    at Object.require.extensions.<computed> [as .ts] (C:\Users\admin\project\dental-clinic\backend\node_modules\ts-node\src\index.ts:1621:12)
+    at Module.load (node:internal/modules/cjs/loader:1553:32)
+    at Module._load (node:internal/modules/cjs/loader:1355:12)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:255:19) {
+  diagnosticCodes: [ 2339 ]
+}
+[31m[nodemon] app crashed - waiting for file changes before starting...[39m
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] starting `ts-node src/index.ts src/index.ts`[39m
+C:\Users\admin\project\dental-clinic\backend\node_modules\ts-node\src\index.ts:859
+    return new TSError(diagnosticText, diagnosticCodes, diagnostics);
+           ^
+TSError: ⨯ Unable to compile TypeScript:
+src/modules/salary/salary.service.ts(517,35): error TS2339: Property '$raw' does not exist on type 'PrismaClient<PrismaClientOptions, never, DefaultArgs>'.
+
+    at createTSError (C:\Users\admin\project\dental-clinic\backend\node_modules\ts-node\src\index.ts:859:12)
+    at reportTSError (C:\Users\admin\project\dental-clinic\backend\node_modules\ts-node\src\index.ts:863:19)
+    at getOutput (C:\Users\admin\project\dental-clinic\backend\node_modules\ts-node\src\index.ts:1077:36)
+    at Object.compile (C:\Users\admin\project\dental-clinic\backend\node_modules\ts-node\src\index.ts:1433:41)
+    at Module.m._compile (C:\Users\admin\project\dental-clinic\backend\node_modules\ts-node\src\index.ts:1617:30)
+    at node:internal/modules/cjs/loader:1961:10
+    at Object.require.extensions.<computed> [as .ts] (C:\Users\admin\project\dental-clinic\backend\node_modules\ts-node\src\index.ts:1621:12)
+    at Module.load (node:internal/modules/cjs/loader:1553:32)
+    at Module._load (node:internal/modules/cjs/loader:1355:12)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:255:19) {
+  diagnosticCodes: [ 2339 ]
+}
+[31m[nodemon] app crashed - waiting for file changes before starting...[39m
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] starting `ts-node src/index.ts src/index.ts`[39m
+C:\Users\admin\project\dental-clinic\backend\node_modules\ts-node\src\index.ts:859
+    return new TSError(diagnosticText, diagnosticCodes, diagnostics);
+           ^
+TSError: ⨯ Unable to compile TypeScript:
+src/modules/salary/salary.service.ts(517,35): error TS2339: Property '$raw' does not exist on type 'PrismaClient<PrismaClientOptions, never, DefaultArgs>'.
+
+    at createTSError (C:\Users\admin\project\dental-clinic\backend\node_modules\ts-node\src\index.ts:859:12)
+    at reportTSError (C:\Users\admin\project\dental-clinic\backend\node_modules\ts-node\src\index.ts:863:19)
+    at getOutput (C:\Users\admin\project\dental-clinic\backend\node_modules\ts-node\src\index.ts:1077:36)
+    at Object.compile (C:\Users\admin\project\dental-clinic\backend\node_modules\ts-node\src\index.ts:1433:41)
+    at Module.m._compile (C:\Users\admin\project\dental-clinic\backend\node_modules\ts-node\src\index.ts:1617:30)
+    at node:internal/modules/cjs/loader:1961:10
+    at Object.require.extensions.<computed> [as .ts] (C:\Users\admin\project\dental-clinic\backend\node_modules\ts-node\src\index.ts:1621:12)
+    at Module.load (node:internal/modules/cjs/loader:1553:32)
+    at Module._load (node:internal/modules/cjs/loader:1355:12)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:255:19) {
+  diagnosticCodes: [ 2339 ]
+}
+[31m[nodemon] app crashed - waiting for file changes before starting...[39m
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] starting `ts-node src/index.ts src/index.ts`[39m
+◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+🚀 Server running on http://localhost:5000
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] starting `ts-node src/index.ts src/index.ts`[39m
+◇ injected env (0) from .env // tip: ⌁ auth for agents [www.vestauth.com]
+🚀 Server running on http://localhost:5000
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] starting `ts-node src/index.ts src/index.ts`[39m
+◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+🚀 Server running on http://localhost:5000
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] starting `ts-node src/index.ts src/index.ts`[39m
+◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
+🚀 Server running on http://localhost:5000
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] starting `ts-node src/index.ts src/index.ts`[39m
+◇ injected env (0) from .env // tip: ⌘ enable debugging { debug: true }
+🚀 Server running on http://localhost:5000
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] starting `ts-node src/index.ts src/index.ts`[39m
+◇ injected env (0) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+🚀 Server running on http://localhost:5000
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] starting `ts-node src/index.ts src/index.ts`[39m
+◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+🚀 Server running on http://localhost:5000
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] starting `ts-node src/index.ts src/index.ts`[39m
+◇ injected env (0) from .env // tip: ⌁ auth for agents [www.vestauth.com]
+🚀 Server running on http://localhost:5000
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] starting `ts-node src/index.ts src/index.ts`[39m
+◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+🚀 Server running on http://localhost:5000
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] starting `ts-node src/index.ts src/index.ts`[39m
+◇ injected env (0) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+🚀 Server running on http://localhost:5000
+[getDoctorComplexityCases] ERROR: 
+Invalid `prisma.$queryRawUnsafe()` invocation:
+
+
+Raw query failed. Code: `1054`. Message: `Unknown column 'undefined' in 'where clause'`
+PrismaClientKnownRequestError: 
+Invalid `prisma.$queryRawUnsafe()` invocation:
+
+
+Raw query failed. Code: `1054`. Message: `Unknown column 'undefined' in 'where clause'`
+    at $n.handleRequestError (C:\Users\admin\project\dental-clinic\backend\node_modules\@prisma\client\runtime\library.js:121:7315)
+    at $n.handleAndLogRequestError (C:\Users\admin\project\dental-clinic\backend\node_modules\@prisma\client\runtime\library.js:121:6623)
+    at $n.request (C:\Users\admin\project\dental-clinic\backend\node_modules\@prisma\client\runtime\library.js:121:6307)
+    at async l (C:\Users\admin\project\dental-clinic\backend\node_modules\@prisma\client\runtime\library.js:130:9633)
+    at async Object.getDoctorComplexityCases (C:\Users\admin\project\dental-clinic\backend\src\modules\salary\salary.service.ts:554:18)
+    at async getDoctorComplexityCases (C:\Users\admin\project\dental-clinic\backend\src\modules\salary\salary.controller.ts:94:14)
+[getDoctorComplexityCases] ERROR: 
+Invalid `prisma.$queryRawUnsafe()` invocation:
+
+
+Raw query failed. Code: `1054`. Message: `Unknown column 'undefined' in 'where clause'`
+PrismaClientKnownRequestError: 
+Invalid `prisma.$queryRawUnsafe()` invocation:
+
+
+Raw query failed. Code: `1054`. Message: `Unknown column 'undefined' in 'where clause'`
+    at $n.handleRequestError (C:\Users\admin\project\dental-clinic\backend\node_modules\@prisma\client\runtime\library.js:121:7315)
+    at $n.handleAndLogRequestError (C:\Users\admin\project\dental-clinic\backend\node_modules\@prisma\client\runtime\library.js:121:6623)
+    at $n.request (C:\Users\admin\project\dental-clinic\backend\node_modules\@prisma\client\runtime\library.js:121:6307)
+    at async l (C:\Users\admin\project\dental-clinic\backend\node_modules\@prisma\client\runtime\library.js:130:9633)
+    at async Object.getDoctorComplexityCases (C:\Users\admin\project\dental-clinic\backend\src\modules\salary\salary.service.ts:554:18)
+    at async getDoctorComplexityCases (C:\Users\admin\project\dental-clinic\backend\src\modules\salary\salary.controller.ts:94:14)
+[getDoctorComplexityCases] ERROR: 
+Invalid `prisma.$queryRawUnsafe()` invocation:
+
+
+Raw query failed. Code: `1054`. Message: `Unknown column 'undefined' in 'where clause'`
+PrismaClientKnownRequestError: 
+Invalid `prisma.$queryRawUnsafe()` invocation:
+
+
+Raw query failed. Code: `1054`. Message: `Unknown column 'undefined' in 'where clause'`
+    at $n.handleRequestError (C:\Users\admin\project\dental-clinic\backend\node_modules\@prisma\client\runtime\library.js:121:7315)
+    at $n.handleAndLogRequestError (C:\Users\admin\project\dental-clinic\backend\node_modules\@prisma\client\runtime\library.js:121:6623)
+    at $n.request (C:\Users\admin\project\dental-clinic\backend\node_modules\@prisma\client\runtime\library.js:121:6307)
+    at async l (C:\Users\admin\project\dental-clinic\backend\node_modules\@prisma\client\runtime\library.js:130:9633)
+    at async Object.getDoctorComplexityCases (C:\Users\admin\project\dental-clinic\backend\src\modules\salary\salary.service.ts:554:18)
+    at async getDoctorComplexityCases (C:\Users\admin\project\dental-clinic\backend\src\modules\salary\salary.controller.ts:94:14)
+[getDoctorComplexityCases] ERROR: 
+Invalid `prisma.$queryRawUnsafe()` invocation:
+
+
+Raw query failed. Code: `1054`. Message: `Unknown column 'undefined' in 'where clause'`
+PrismaClientKnownRequestError: 
+Invalid `prisma.$queryRawUnsafe()` invocation:
+
+
+Raw query failed. Code: `1054`. Message: `Unknown column 'undefined' in 'where clause'`
+    at $n.handleRequestError (C:\Users\admin\project\dental-clinic\backend\node_modules\@prisma\client\runtime\library.js:121:7315)
+    at $n.handleAndLogRequestError (C:\Users\admin\project\dental-clinic\backend\node_modules\@prisma\client\runtime\library.js:121:6623)
+    at $n.request (C:\Users\admin\project\dental-clinic\backend\node_modules\@prisma\client\runtime\library.js:121:6307)
+    at async l (C:\Users\admin\project\dental-clinic\backend\node_modules\@prisma\client\runtime\library.js:130:9633)
+    at async Object.getDoctorComplexityCases (C:\Users\admin\project\dental-clinic\backend\src\modules\salary\salary.service.ts:554:18)
+    at async getDoctorComplexityCases (C:\Users\admin\project\dental-clinic\backend\src\modules\salary\salary.controller.ts:94:14)
+[getDoctorComplexityCases] ERROR: 
+Invalid `prisma.$queryRawUnsafe()` invocation:
+
+
+Raw query failed. Code: `1054`. Message: `Unknown column 'undefined' in 'where clause'`
+PrismaClientKnownRequestError: 
+Invalid `prisma.$queryRawUnsafe()` invocation:
+
+
+Raw query failed. Code: `1054`. Message: `Unknown column 'undefined' in 'where clause'`
+    at $n.handleRequestError (C:\Users\admin\project\dental-clinic\backend\node_modules\@prisma\client\runtime\library.js:121:7315)
+    at $n.handleAndLogRequestError (C:\Users\admin\project\dental-clinic\backend\node_modules\@prisma\client\runtime\library.js:121:6623)
+    at $n.request (C:\Users\admin\project\dental-clinic\backend\node_modules\@prisma\client\runtime\library.js:121:6307)
+    at async l (C:\Users\admin\project\dental-clinic\backend\node_modules\@prisma\client\runtime\library.js:130:9633)
+    at async Object.getDoctorComplexityCases (C:\Users\admin\project\dental-clinic\backend\src\modules\salary\salary.service.ts:554:18)
+    at async getDoctorComplexityCases (C:\Users\admin\project\dental-clinic\backend\src\modules\salary\salary.controller.ts:94:14)
+[getDoctorComplexityCases] ERROR: 
+Invalid `prisma.$queryRawUnsafe()` invocation:
+
+
+Raw query failed. Code: `1054`. Message: `Unknown column 'undefined' in 'where clause'`
+PrismaClientKnownRequestError: 
+Invalid `prisma.$queryRawUnsafe()` invocation:
+
+
+Raw query failed. Code: `1054`. Message: `Unknown column 'undefined' in 'where clause'`
+    at $n.handleRequestError (C:\Users\admin\project\dental-clinic\backend\node_modules\@prisma\client\runtime\library.js:121:7315)
+    at $n.handleAndLogRequestError (C:\Users\admin\project\dental-clinic\backend\node_modules\@prisma\client\runtime\library.js:121:6623)
+    at $n.request (C:\Users\admin\project\dental-clinic\backend\node_modules\@prisma\client\runtime\library.js:121:6307)
+    at async l (C:\Users\admin\project\dental-clinic\backend\node_modules\@prisma\client\runtime\library.js:130:9633)
+    at async Object.getDoctorComplexityCases (C:\Users\admin\project\dental-clinic\backend\src\modules\salary\salary.service.ts:554:18)
+    at async getDoctorComplexityCases (C:\Users\admin\project\dental-clinic\backend\src\modules\salary\salary.controller.ts:94:14)
+[getDoctorComplexityCases] ERROR: 
+Invalid `prisma.$queryRawUnsafe()` invocation:
+
+
+Raw query failed. Code: `1054`. Message: `Unknown column 'undefined' in 'where clause'`
+PrismaClientKnownRequestError: 
+Invalid `prisma.$queryRawUnsafe()` invocation:
+
+
+Raw query failed. Code: `1054`. Message: `Unknown column 'undefined' in 'where clause'`
+    at $n.handleRequestError (C:\Users\admin\project\dental-clinic\backend\node_modules\@prisma\client\runtime\library.js:121:7315)
+    at $n.handleAndLogRequestError (C:\Users\admin\project\dental-clinic\backend\node_modules\@prisma\client\runtime\library.js:121:6623)
+    at $n.request (C:\Users\admin\project\dental-clinic\backend\node_modules\@prisma\client\runtime\library.js:121:6307)
+    at async l (C:\Users\admin\project\dental-clinic\backend\node_modules\@prisma\client\runtime\library.js:130:9633)
+    at async Object.getDoctorComplexityCases (C:\Users\admin\project\dental-clinic\backend\src\modules\salary\salary.service.ts:554:18)
+    at async getDoctorComplexityCases (C:\Users\admin\project\dental-clinic\backend\src\modules\salary\salary.controller.ts:94:14)
+[getDoctorComplexityCases] ERROR: 
+Invalid `prisma.$queryRawUnsafe()` invocation:
+
+
+Raw query failed. Code: `1054`. Message: `Unknown column 'undefined' in 'where clause'`
+PrismaClientKnownRequestError: 
+Invalid `prisma.$queryRawUnsafe()` invocation:
+
+
+Raw query failed. Code: `1054`. Message: `Unknown column 'undefined' in 'where clause'`
+    at $n.handleRequestError (C:\Users\admin\project\dental-clinic\backend\node_modules\@prisma\client\runtime\library.js:121:7315)
+    at $n.handleAndLogRequestError (C:\Users\admin\project\dental-clinic\backend\node_modules\@prisma\client\runtime\library.js:121:6623)
+    at $n.request (C:\Users\admin\project\dental-clinic\backend\node_modules\@prisma\client\runtime\library.js:121:6307)
+    at async l (C:\Users\admin\project\dental-clinic\backend\node_modules\@prisma\client\runtime\library.js:130:9633)
+    at async Object.getDoctorComplexityCases (C:\Users\admin\project\dental-clinic\backend\src\modules\salary\salary.service.ts:554:18)
+    at async getDoctorComplexityCases (C:\Users\admin\project\dental-clinic\backend\src\modules\salary\salary.controller.ts:94:14)
+[getDoctorComplexityCases] ERROR: 
+Invalid `prisma.$queryRawUnsafe()` invocation:
+
+
+Raw query failed. Code: `1054`. Message: `Unknown column 'undefined' in 'where clause'`
+PrismaClientKnownRequestError: 
+Invalid `prisma.$queryRawUnsafe()` invocation:
+
+
+Raw query failed. Code: `1054`. Message: `Unknown column 'undefined' in 'where clause'`
+    at $n.handleRequestError (C:\Users\admin\project\dental-clinic\backend\node_modules\@prisma\client\runtime\library.js:121:7315)
+    at $n.handleAndLogRequestError (C:\Users\admin\project\dental-clinic\backend\node_modules\@prisma\client\runtime\library.js:121:6623)
+    at $n.request (C:\Users\admin\project\dental-clinic\backend\node_modules\@prisma\client\runtime\library.js:121:6307)
+    at async l (C:\Users\admin\project\dental-clinic\backend\node_modules\@prisma\client\runtime\library.js:130:9633)
+    at async Object.getDoctorComplexityCases (C:\Users\admin\project\dental-clinic\backend\src\modules\salary\salary.service.ts:554:18)
+    at async getDoctorComplexityCases (C:\Users\admin\project\dental-clinic\backend\src\modules\salary\salary.controller.ts:94:14)
+[getDoctorComplexityCases] ERROR: 
+Invalid `prisma.$queryRawUnsafe()` invocation:
+
+
+Raw query failed. Code: `1054`. Message: `Unknown column 'undefined' in 'where clause'`
+PrismaClientKnownRequestError: 
+Invalid `prisma.$queryRawUnsafe()` invocation:
+
+
+Raw query failed. Code: `1054`. Message: `Unknown column 'undefined' in 'where clause'`
+    at $n.handleRequestError (C:\Users\admin\project\dental-clinic\backend\node_modules\@prisma\client\runtime\library.js:121:7315)
+    at $n.handleAndLogRequestError (C:\Users\admin\project\dental-clinic\backend\node_modules\@prisma\client\runtime\library.js:121:6623)
+    at $n.request (C:\Users\admin\project\dental-clinic\backend\node_modules\@prisma\client\runtime\library.js:121:6307)
+    at async l (C:\Users\admin\project\dental-clinic\backend\node_modules\@prisma\client\runtime\library.js:130:9633)
+    at async Object.getDoctorComplexityCases (C:\Users\admin\project\dental-clinic\backend\src\modules\salary\salary.service.ts:554:18)
+    at async getDoctorComplexityCases (C:\Users\admin\project\dental-clinic\backend\src\modules\salary\salary.controller.ts:94:14)
+[getDoctorComplexityCases] ERROR: 
+Invalid `prisma.$queryRawUnsafe()` invocation:
+
+
+Raw query failed. Code: `1054`. Message: `Unknown column 'undefined' in 'where clause'`
+PrismaClientKnownRequestError: 
+Invalid `prisma.$queryRawUnsafe()` invocation:
+
+
+Raw query failed. Code: `1054`. Message: `Unknown column 'undefined' in 'where clause'`
+    at $n.handleRequestError (C:\Users\admin\project\dental-clinic\backend\node_modules\@prisma\client\runtime\library.js:121:7315)
+    at $n.handleAndLogRequestError (C:\Users\admin\project\dental-clinic\backend\node_modules\@prisma\client\runtime\library.js:121:6623)
+    at $n.request (C:\Users\admin\project\dental-clinic\backend\node_modules\@prisma\client\runtime\library.js:121:6307)
+    at async l (C:\Users\admin\project\dental-clinic\backend\node_modules\@prisma\client\runtime\library.js:130:9633)
+    at async Object.getDoctorComplexityCases (C:\Users\admin\project\dental-clinic\backend\src\modules\salary\salary.service.ts:554:18)
+    at async getDoctorComplexityCases (C:\Users\admin\project\dental-clinic\backend\src\modules\salary\salary.controller.ts:94:14)
+[getDoctorComplexityCases] ERROR: 
+Invalid `prisma.$queryRawUnsafe()` invocation:
+
+
+Raw query failed. Code: `1054`. Message: `Unknown column 'undefined' in 'where clause'`
+PrismaClientKnownRequestError: 
+Invalid `prisma.$queryRawUnsafe()` invocation:
+
+
+Raw query failed. Code: `1054`. Message: `Unknown column 'undefined' in 'where clause'`
+    at $n.handleRequestError (C:\Users\admin\project\dental-clinic\backend\node_modules\@prisma\client\runtime\library.js:121:7315)
+    at $n.handleAndLogRequestError (C:\Users\admin\project\dental-clinic\backend\node_modules\@prisma\client\runtime\library.js:121:6623)
+    at $n.request (C:\Users\admin\project\dental-clinic\backend\node_modules\@prisma\client\runtime\library.js:121:6307)
+    at async l (C:\Users\admin\project\dental-clinic\backend\node_modules\@prisma\client\runtime\library.js:130:9633)
+    at async Object.getDoctorComplexityCases (C:\Users\admin\project\dental-clinic\backend\src\modules\salary\salary.service.ts:554:18)
+    at async getDoctorComplexityCases (C:\Users\admin\project\dental-clinic\backend\src\modules\salary\salary.controller.ts:94:14)
+[getDoctorComplexityCases] ERROR: 
+Invalid `prisma.$queryRawUnsafe()` invocation:
+
+
+Raw query failed. Code: `1054`. Message: `Unknown column 'undefined' in 'where clause'`
+PrismaClientKnownRequestError: 
+Invalid `prisma.$queryRawUnsafe()` invocation:
+
+
+Raw query failed. Code: `1054`. Message: `Unknown column 'undefined' in 'where clause'`
+    at $n.handleRequestError (C:\Users\admin\project\dental-clinic\backend\node_modules\@prisma\client\runtime\library.js:121:7315)
+    at $n.handleAndLogRequestError (C:\Users\admin\project\dental-clinic\backend\node_modules\@prisma\client\runtime\library.js:121:6623)
+    at $n.request (C:\Users\admin\project\dental-clinic\backend\node_modules\@prisma\client\runtime\library.js:121:6307)
+    at async l (C:\Users\admin\project\dental-clinic\backend\node_modules\@prisma\client\runtime\library.js:130:9633)
+    at async Object.getDoctorComplexityCases (C:\Users\admin\project\dental-clinic\backend\src\modules\salary\salary.service.ts:554:18)
+    at async getDoctorComplexityCases (C:\Users\admin\project\dental-clinic\backend\src\modules\salary\salary.controller.ts:94:14)
+[getDoctorComplexityCases] ERROR: 
+Invalid `prisma.$queryRawUnsafe()` invocation:
+
+
+Raw query failed. Code: `1054`. Message: `Unknown column 'undefined' in 'where clause'`
+PrismaClientKnownRequestError: 
+Invalid `prisma.$queryRawUnsafe()` invocation:
+
+
+Raw query failed. Code: `1054`. Message: `Unknown column 'undefined' in 'where clause'`
+    at $n.handleRequestError (C:\Users\admin\project\dental-clinic\backend\node_modules\@prisma\client\runtime\library.js:121:7315)
+    at $n.handleAndLogRequestError (C:\Users\admin\project\dental-clinic\backend\node_modules\@prisma\client\runtime\library.js:121:6623)
+    at $n.request (C:\Users\admin\project\dental-clinic\backend\node_modules\@prisma\client\runtime\library.js:121:6307)
+    at async l (C:\Users\admin\project\dental-clinic\backend\node_modules\@prisma\client\runtime\library.js:130:9633)
+    at async Object.getDoctorComplexityCases (C:\Users\admin\project\dental-clinic\backend\src\modules\salary\salary.service.ts:554:18)
+    at async getDoctorComplexityCases (C:\Users\admin\project\dental-clinic\backend\src\modules\salary\salary.controller.ts:94:14)
+[getDoctorComplexityCases] ERROR: 
+Invalid `prisma.$queryRawUnsafe()` invocation:
+
+
+Raw query failed. Code: `1054`. Message: `Unknown column 'undefined' in 'where clause'`
+PrismaClientKnownRequestError: 
+Invalid `prisma.$queryRawUnsafe()` invocation:
+
+
+Raw query failed. Code: `1054`. Message: `Unknown column 'undefined' in 'where clause'`
+    at $n.handleRequestError (C:\Users\admin\project\dental-clinic\backend\node_modules\@prisma\client\runtime\library.js:121:7315)
+    at $n.handleAndLogRequestError (C:\Users\admin\project\dental-clinic\backend\node_modules\@prisma\client\runtime\library.js:121:6623)
+    at $n.request (C:\Users\admin\project\dental-clinic\backend\node_modules\@prisma\client\runtime\library.js:121:6307)
+    at async l (C:\Users\admin\project\dental-clinic\backend\node_modules\@prisma\client\runtime\library.js:130:9633)
+    at async Object.getDoctorComplexityCases (C:\Users\admin\project\dental-clinic\backend\src\modules\salary\salary.service.ts:554:18)
+    at async getDoctorComplexityCases (C:\Users\admin\project\dental-clinic\backend\src\modules\salary\salary.controller.ts:94:14)
+[getDoctorComplexityCases] ERROR: 
+Invalid `prisma.$queryRawUnsafe()` invocation:
+
+
+Raw query failed. Code: `1054`. Message: `Unknown column 'undefined' in 'where clause'`
+PrismaClientKnownRequestError: 
+Invalid `prisma.$queryRawUnsafe()` invocation:
+
+
+Raw query failed. Code: `1054`. Message: `Unknown column 'undefined' in 'where clause'`
+    at $n.handleRequestError (C:\Users\admin\project\dental-clinic\backend\node_modules\@prisma\client\runtime\library.js:121:7315)
+    at $n.handleAndLogRequestError (C:\Users\admin\project\dental-clinic\backend\node_modules\@prisma\client\runtime\library.js:121:6623)
+    at $n.request (C:\Users\admin\project\dental-clinic\backend\node_modules\@prisma\client\runtime\library.js:121:6307)
+    at async l (C:\Users\admin\project\dental-clinic\backend\node_modules\@prisma\client\runtime\library.js:130:9633)
+    at async Object.getDoctorComplexityCases (C:\Users\admin\project\dental-clinic\backend\src\modules\salary\salary.service.ts:554:18)
+    at async getDoctorComplexityCases (C:\Users\admin\project\dental-clinic\backend\src\modules\salary\salary.controller.ts:94:14)
+[getDoctorComplexityCases] ERROR: 
+Invalid `prisma.$queryRawUnsafe()` invocation:
+
+
+Raw query failed. Code: `1054`. Message: `Unknown column 'undefined' in 'where clause'`
+PrismaClientKnownRequestError: 
+Invalid `prisma.$queryRawUnsafe()` invocation:
+
+
+Raw query failed. Code: `1054`. Message: `Unknown column 'undefined' in 'where clause'`
+    at $n.handleRequestError (C:\Users\admin\project\dental-clinic\backend\node_modules\@prisma\client\runtime\library.js:121:7315)
+    at $n.handleAndLogRequestError (C:\Users\admin\project\dental-clinic\backend\node_modules\@prisma\client\runtime\library.js:121:6623)
+    at $n.request (C:\Users\admin\project\dental-clinic\backend\node_modules\@prisma\client\runtime\library.js:121:6307)
+    at async l (C:\Users\admin\project\dental-clinic\backend\node_modules\@prisma\client\runtime\library.js:130:9633)
+    at async Object.getDoctorComplexityCases (C:\Users\admin\project\dental-clinic\backend\src\modules\salary\salary.service.ts:554:18)
+    at async getDoctorComplexityCases (C:\Users\admin\project\dental-clinic\backend\src\modules\salary\salary.controller.ts:94:14)
+[getDoctorComplexityCases] ERROR: 
+Invalid `prisma.$queryRawUnsafe()` invocation:
+
+
+Raw query failed. Code: `1054`. Message: `Unknown column 'undefined' in 'where clause'`
+PrismaClientKnownRequestError: 
+Invalid `prisma.$queryRawUnsafe()` invocation:
+
+
+Raw query failed. Code: `1054`. Message: `Unknown column 'undefined' in 'where clause'`
+    at $n.handleRequestError (C:\Users\admin\project\dental-clinic\backend\node_modules\@prisma\client\runtime\library.js:121:7315)
+    at $n.handleAndLogRequestError (C:\Users\admin\project\dental-clinic\backend\node_modules\@prisma\client\runtime\library.js:121:6623)
+    at $n.request (C:\Users\admin\project\dental-clinic\backend\node_modules\@prisma\client\runtime\library.js:121:6307)
+    at async l (C:\Users\admin\project\dental-clinic\backend\node_modules\@prisma\client\runtime\library.js:130:9633)
+    at async Object.getDoctorComplexityCases (C:\Users\admin\project\dental-clinic\backend\src\modules\salary\salary.service.ts:554:18)
+    at async getDoctorComplexityCases (C:\Users\admin\project\dental-clinic\backend\src\modules\salary\salary.controller.ts:94:14)
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] starting `ts-node src/index.ts src/index.ts`[39m
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] starting `ts-node src/index.ts src/index.ts`[39m
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] starting `ts-node src/index.ts src/index.ts`[39m
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] starting `ts-node src/index.ts src/index.ts`[39m
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] starting `ts-node src/index.ts src/index.ts`[39m
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] starting `ts-node src/index.ts src/index.ts`[39m
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] starting `ts-node src/index.ts src/index.ts`[39m
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] starting `ts-node src/index.ts src/index.ts`[39m
+◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
+🚀 Server running on http://localhost:5000
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] starting `ts-node src/index.ts src/index.ts`[39m
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] starting `ts-node src/index.ts src/index.ts`[39m
+◇ injected env (0) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+🚀 Server running on http://localhost:5000
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] starting `ts-node src/index.ts src/index.ts`[39m
+◇ injected env (0) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+🚀 Server running on http://localhost:5000
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] starting `ts-node src/index.ts src/index.ts`[39m
+◇ injected env (0) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+🚀 Server running on http://localhost:5000
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] starting `ts-node src/index.ts src/index.ts`[39m
+C:\Users\admin\project\dental-clinic\backend\node_modules\ts-node\src\index.ts:859
+    return new TSError(diagnosticText, diagnosticCodes, diagnostics);
+           ^
+TSError: ⨯ Unable to compile TypeScript:
+src/modules/salary/salary.controller.ts(148,25): error TS2345: Argument of type 'string | string[]' is not assignable to parameter of type 'string'.
+  Type 'string[]' is not assignable to type 'string'.
+src/modules/salary/salary.controller.ts(156,25): error TS2345: Argument of type 'string | string[]' is not assignable to parameter of type 'string'.
+  Type 'string[]' is not assignable to type 'string'.
+src/modules/salary/salary.controller.ts(164,25): error TS2345: Argument of type 'string | string[]' is not assignable to parameter of type 'string'.
+  Type 'string[]' is not assignable to type 'string'.
+src/modules/salary/salary.controller.ts(172,25): error TS2345: Argument of type 'string | string[]' is not assignable to parameter of type 'string'.
+  Type 'string[]' is not assignable to type 'string'.
+
+    at createTSError (C:\Users\admin\project\dental-clinic\backend\node_modules\ts-node\src\index.ts:859:12)
+    at reportTSError (C:\Users\admin\project\dental-clinic\backend\node_modules\ts-node\src\index.ts:863:19)
+    at getOutput (C:\Users\admin\project\dental-clinic\backend\node_modules\ts-node\src\index.ts:1077:36)
+    at Object.compile (C:\Users\admin\project\dental-clinic\backend\node_modules\ts-node\src\index.ts:1433:41)
+    at Module.m._compile (C:\Users\admin\project\dental-clinic\backend\node_modules\ts-node\src\index.ts:1617:30)
+    at node:internal/modules/cjs/loader:1961:10
+    at Object.require.extensions.<computed> [as .ts] (C:\Users\admin\project\dental-clinic\backend\node_modules\ts-node\src\index.ts:1621:12)
+    at Module.load (node:internal/modules/cjs/loader:1553:32)
+    at Module._load (node:internal/modules/cjs/loader:1355:12)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:255:19) {
+  diagnosticCodes: [ 2345, 2345, 2345, 2345 ]
+}
+[31m[nodemon] app crashed - waiting for file changes before starting...[39m
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] starting `ts-node src/index.ts src/index.ts`[39m
+C:\Users\admin\project\dental-clinic\backend\node_modules\ts-node\src\index.ts:859
+    return new TSError(diagnosticText, diagnosticCodes, diagnostics);
+           ^
+TSError: ⨯ Unable to compile TypeScript:
+src/modules/salary/salary.controller.ts(148,25): error TS2345: Argument of type 'string | string[]' is not assignable to parameter of type 'string'.
+  Type 'string[]' is not assignable to type 'string'.
+src/modules/salary/salary.controller.ts(156,25): error TS2345: Argument of type 'string | string[]' is not assignable to parameter of type 'string'.
+  Type 'string[]' is not assignable to type 'string'.
+src/modules/salary/salary.controller.ts(164,25): error TS2345: Argument of type 'string | string[]' is not assignable to parameter of type 'string'.
+  Type 'string[]' is not assignable to type 'string'.
+src/modules/salary/salary.controller.ts(172,25): error TS2345: Argument of type 'string | string[]' is not assignable to parameter of type 'string'.
+  Type 'string[]' is not assignable to type 'string'.
+
+    at createTSError (C:\Users\admin\project\dental-clinic\backend\node_modules\ts-node\src\index.ts:859:12)
+    at reportTSError (C:\Users\admin\project\dental-clinic\backend\node_modules\ts-node\src\index.ts:863:19)
+    at getOutput (C:\Users\admin\project\dental-clinic\backend\node_modules\ts-node\src\index.ts:1077:36)
+    at Object.compile (C:\Users\admin\project\dental-clinic\backend\node_modules\ts-node\src\index.ts:1433:41)
+    at Module.m._compile (C:\Users\admin\project\dental-clinic\backend\node_modules\ts-node\src\index.ts:1617:30)
+    at node:internal/modules/cjs/loader:1961:10
+    at Object.require.extensions.<computed> [as .ts] (C:\Users\admin\project\dental-clinic\backend\node_modules\ts-node\src\index.ts:1621:12)
+    at Module.load (node:internal/modules/cjs/loader:1553:32)
+    at Module._load (node:internal/modules/cjs/loader:1355:12)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:255:19) {
+  diagnosticCodes: [ 2345, 2345, 2345, 2345 ]
+}
+[31m[nodemon] app crashed - waiting for file changes before starting...[39m
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] starting `ts-node src/index.ts src/index.ts`[39m
+◇ injected env (0) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+🚀 Server running on http://localhost:5000
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] starting `ts-node src/index.ts src/index.ts`[39m
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] starting `ts-node src/index.ts src/index.ts`[39m
+◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+🚀 Server running on http://localhost:5000

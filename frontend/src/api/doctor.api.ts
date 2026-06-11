@@ -19,18 +19,20 @@ export interface MyShift {
   maxPatients:      number
   totalSlots:       number
   bookedCount:      number
+  visitedCount:     number   // bệnh nhân thực tế đã đến (reception)
   freeCount:        number
   serviceGroupId:   number | null
   serviceGroupName: string | null
   note:             string | null
   isOverride:       boolean
-  status:           'FREE' | 'BUSY' | 'FULL'
+  status:           'FREE' | 'BUSY' | 'FULL' | 'VISITED'
 }
 
 export interface MyScheduleDay extends WeekDayMeta {
-  shifts:      MyShift[]
-  totalBooked: number
-  totalFree:   number
+  shifts:       MyShift[]
+  totalBooked:  number
+  totalVisited: number
+  totalFree:    number
 }
 
 export interface MyScheduleData {
@@ -41,9 +43,10 @@ export interface MyScheduleData {
   mySchedule:    MyScheduleDay[]
   serviceGroups: { id: number; name: string }[]
   weekStats: {
-    totalShifts: number
-    totalBooked: number
-    totalFree:   number
+    totalShifts:  number
+    totalBooked:  number
+    totalVisited: number
+    totalFree:    number
   }
 }
 

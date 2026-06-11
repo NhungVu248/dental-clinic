@@ -12,6 +12,11 @@ import holidayRoutes  from './modules/holiday/holiday.routes'
 import smsRoutes          from './modules/sms/sms.routes'
 import receptionistRoutes from './modules/receptionist/receptionist.routes'
 import doctorRoutes      from './modules/doctor/doctor.routes'
+import patientRoutes     from './modules/patient/patient.routes'
+import receptionRoutes  from './modules/reception/reception.routes'
+import treatmentRoutes  from './modules/treatment/treatment.routes'
+import invoiceRoutes    from './modules/invoice/invoice.routes'
+import salaryRoutes    from './modules/salary/salary.routes'
 
 dotenv.config()
 
@@ -62,6 +67,11 @@ app.use('/api/holidays',  holidayRoutes)
 app.use('/api/sms',          smsRoutes)
 app.use('/api/receptionist', receptionistRoutes)
 app.use('/api/doctor',      doctorRoutes)
+app.use('/api/patients',    patientRoutes)
+app.use('/api/reception',   receptionRoutes)
+app.use('/api/treatment',   treatmentRoutes)
+app.use('/api/invoice',     invoiceRoutes)
+app.use('/api/salary',      salaryRoutes)
 app.get('/health', (_, res) => res.json({ status: 'OK' }))
 
 app.listen(PORT, () => {

@@ -21,7 +21,16 @@ import ProfilePage    from '../pages/profile/ProfilePage'
 import ShiftsPage     from '../pages/shifts/ShiftsPage'
 import SchedulesPage  from '../pages/schedules/SchedulesPage'
 import HolidaysPage   from '../pages/holidays/HolidaysPage'
-import SmsPage        from '../pages/sms/SmsPage'
+import SmsPage              from '../pages/sms/SmsPage'
+import SalaryConfigPage         from '../pages/salary/SalaryConfigPage'
+import SalaryPlaceholderPage    from '../pages/salary/SalaryPlaceholderPage'
+import ShiftCoefficientPage       from '../pages/salary/ShiftCoefficientPage'
+import MonthlySalaryReportPage   from '../pages/salary/MonthlySalaryReportPage'
+import AnnualPersonalReportPage  from '../pages/salary/AnnualPersonalReportPage'
+import AnnualFullReportPage      from '../pages/salary/AnnualFullReportPage'
+import ShiftComplexityAdminPage  from '../pages/salary/ShiftComplexityAdminPage'
+import DoctorComplexityPage      from '../pages/salary/DoctorComplexityPage'
+import PayslipPage               from '../pages/salary/PayslipPage'
 
 // Staff pages
 import StaffDashboardPage        from '../pages/staff/StaffDashboardPage'
@@ -35,6 +44,10 @@ import StaffSmsPage             from '../pages/staff/StaffSmsPage'
 import PatientListPage          from '../pages/patients/PatientListPage'
 import NewPatientPage           from '../pages/patients/NewPatientPage'
 import PatientDetailPage        from '../pages/patients/PatientDetailPage'
+import ReceptionPage           from '../pages/reception/ReceptionPage'
+import TreatmentPage          from '../pages/treatment/TreatmentPage'
+import InvoicePage            from '../pages/invoice/InvoicePage'
+import StatsPage              from '../pages/stats/StatsPage'
 
 // ─── Route guards ─────────────────────────────────────────────
 
@@ -92,18 +105,29 @@ export default function AppRouter() {
           <Route path="/staff/holidays"         element={<StaffPlaceholderPage />} />
           <Route path="/staff/sms"              element={<StaffSmsPage />} />
 
+          {/* Tiếp đón & Hàng chờ (CN3.5 – CN3.6) */}
+          <Route path="/staff/reception"        element={<ReceptionPage />} />
+
           {/* Bệnh nhân (CN3.1 – CN3.3) */}
           <Route path="/staff/patients"         element={<PatientListPage />} />
           <Route path="/staff/patients/new"     element={<NewPatientPage />} />
           <Route path="/staff/patients/:id"     element={<PatientDetailPage />} />
 
-          {/* Bác sĩ */}
+          {/* Bác sĩ — Khám & Điều trị (UC CN3.7) */}
+          <Route path="/staff/treatment"        element={<TreatmentPage />} />
           <Route path="/staff/today-schedule"   element={<TodaySchedulePage />} />
           <Route path="/staff/my-schedule"      element={<DoctorMySchedulePage />} />
 
-          {/* Kế toán */}
-          <Route path="/staff/invoices"         element={<StaffPlaceholderPage />} />
-          <Route path="/staff/reports"          element={<StaffPlaceholderPage />} />
+          {/* Kế toán — Hóa đơn & Thống kê (UC CN3.8–3.10) */}
+          <Route path="/staff/invoices"         element={<InvoicePage />} />
+          <Route path="/staff/stats"            element={<StatsPage />} />
+
+          {/* Lương (UC4.3 – Bác sĩ & Admin; UC4.4/4.5/4.6/4.7 – Kế toán) */}
+          <Route path="/staff/salary/uc4.3"     element={<DoctorComplexityPage />} />
+          <Route path="/staff/salary/uc4.4"     element={<PayslipPage />} />
+          <Route path="/staff/salary/uc4.5"     element={<MonthlySalaryReportPage />} />
+          <Route path="/staff/salary/uc4.6"     element={<AnnualPersonalReportPage />} />
+          <Route path="/staff/salary/uc4.7"     element={<AnnualFullReportPage />} />
 
           {/* Tài khoản */}
           <Route path="/staff/profile"          element={<StaffPlaceholderPage />} />
@@ -125,6 +149,17 @@ export default function AppRouter() {
           <Route path="/schedules"        element={<SchedulesPage />} />
           <Route path="/holidays"         element={<HolidaysPage />} />
           <Route path="/sms"              element={<SmsPage />} />
+          <Route path="/stats"            element={<StatsPage />} />
+          <Route path="/invoices"         element={<InvoicePage />} />
+          {/* ── UC4: Quản lý lương (Admin) ── */}
+          <Route path="/salary/uc4.1" element={<SalaryConfigPage />} />
+          <Route path="/salary/uc4.2" element={<ShiftCoefficientPage />} />
+          <Route path="/salary/uc4.3" element={<ShiftComplexityAdminPage />} />
+          <Route path="/salary/uc4.4" element={<PayslipPage />} />
+          <Route path="/salary/uc4.5" element={<MonthlySalaryReportPage />} />
+          <Route path="/salary/uc4.6" element={<AnnualPersonalReportPage />} />
+          <Route path="/salary/uc4.7" element={<AnnualFullReportPage />} />
+          <Route path="/salary"       element={<Navigate to="/salary/uc4.1" replace />} />
         </Route>
 
         {/* ── Legacy redirect ── */}

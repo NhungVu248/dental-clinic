@@ -103,6 +103,23 @@ export const getMySchedule = async (doctorId: number, weekStart: string) => {
     }),
   ])
 
+  // Đếm bệnh nhân thực tế đã đến (reception) theo scheduleId
+  // Dùng $queryRawUnsafe vì reception.scheduleId thêm sau, Prisma schema chưa generate lại
+  const schedIds = schedules.map(s => s.id)
+  const visitMap: Record<number, number> = {}
+  if (schedIds.length > 0) {
+    const visitRows = await (prisma as any).$queryRawUnsafe(`
+      SELECT scheduleId, COUNT(*) AS cnt
+      FROM   reception
+      WHERE  scheduleId IN (${schedIds.join(',')})
+        AND  status NOT IN ('CANCELLED','ABSENT')
+      GROUP BY scheduleId
+    `) as { scheduleId: number | bigint; cnt: number | bigint }[]
+    for (const row of visitRows) {
+      visitMap[Number(row.scheduleId)] = Number(row.cnt)
+    }
+  }
+
   const myGroups = (doctorInfo?.serviceGroups ?? []).map(sg => ({
     id:   sg.serviceGroup.id,
     name: sg.serviceGroup.name,
@@ -128,6 +145,7 @@ export const getMySchedule = async (doctorId: number, weekStart: string) => {
 
       const shiftApts   = dayApts.filter(a => aptInShift(new Date(a.appointmentDate), sh.startTime, sh.endTime))
       const bookedCount = shiftApts.length
+      const visitedCount = visitMap[sch.id] ?? 0
       const freeCount   = Math.max(0, maxEff - bookedCount)
       const pct         = maxEff > 0 ? bookedCount / maxEff : 0
 
@@ -141,20 +159,22 @@ export const getMySchedule = async (doctorId: number, weekStart: string) => {
         maxPatients:      maxEff,
         totalSlots:       slotTimes.length,
         bookedCount,
+        visitedCount,     // bệnh nhân thực tế đã đến (reception)
         freeCount,
         serviceGroupId:   sch.serviceGroupId,
         serviceGroupName: sch.serviceGroup?.name ?? null,
         note:             sch.note,
         isOverride:       sch.isOverride,
-        status: pct >= 1 ? 'FULL' : bookedCount > 0 ? 'BUSY' : 'FREE',
+        status: pct >= 1 ? 'FULL' : bookedCount > 0 ? 'BUSY' : visitedCount > 0 ? 'VISITED' : 'FREE',
       }
     })
 
     return {
       ...wd,
       shifts,
-      totalBooked: shifts.reduce((s, sh) => s + sh.bookedCount, 0),
-      totalFree:   shifts.reduce((s, sh) => s + sh.freeCount, 0),
+      totalBooked:   shifts.reduce((s, sh) => s + sh.bookedCount, 0),
+      totalVisited:  shifts.reduce((s, sh) => s + sh.visitedCount, 0),
+      totalFree:     shifts.reduce((s, sh) => s + sh.freeCount, 0),
     }
   })
 
@@ -166,9 +186,10 @@ export const getMySchedule = async (doctorId: number, weekStart: string) => {
     mySchedule,
     serviceGroups: myGroups,
     weekStats: {
-      totalShifts: schedules.length,
-      totalBooked: mySchedule.reduce((s, d) => s + d.totalBooked, 0),
-      totalFree:   mySchedule.reduce((s, d) => s + d.totalFree, 0),
+      totalShifts:   schedules.length,
+      totalBooked:   mySchedule.reduce((s, d) => s + d.totalBooked, 0),
+      totalVisited:  mySchedule.reduce((s, d) => s + d.totalVisited, 0),
+      totalFree:     mySchedule.reduce((s, d) => s + d.totalFree, 0),
     },
   }
 }

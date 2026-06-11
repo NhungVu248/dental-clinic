@@ -21,6 +21,13 @@ const pageTitles: Record<string, { title: string; subtitle?: string }> = {
   '/schedules':           { title: 'Phân công Lịch trực Bác sĩ', subtitle: 'Lên lịch, phân công và quản lý lịch trực bác sĩ theo tuần (UC08).' },
   '/holidays':            { title: 'Quản lý Ngày nghỉ lễ', subtitle: 'Cấu hình ngày nghỉ, lễ tết và các ngày không tiếp bệnh nhân (UC07).' },
   '/sms':                 { title: 'Cấu hình Thông báo SMS', subtitle: 'Quản lý mẫu SMS, cài đặt gateway và lịch sử gửi thông báo tự động (UC10).' },
+  '/salary/uc4.1': { title: 'Mức tiền cơ bản',     subtitle: 'Cấu hình đơn giá giờ công và lương cố định tháng (UC4.1).' },
+  '/salary/uc4.2': { title: 'Hệ số ca làm việc',  subtitle: 'Cấu hình hệ số nhân lương theo loại ca làm việc (UC4.2).' },
+  '/salary/uc4.3': { title: 'Hệ số ca phức tạp',  subtitle: 'Phê duyệt hệ số ca phức tạp cho bác sĩ (UC4.3).' },
+  '/salary/uc4.5': { title: 'Báo cáo lương tháng', subtitle: 'Tổng hợp quỹ lương tất cả nhân sự trong tháng (UC4.5).' },
+  '/salary/uc4.6': { title: 'Lương năm – 1 nhân sự', subtitle: 'Tra cứu lịch sử lương năm từng nhân sự (UC4.6).' },
+  '/salary/uc4.7': { title: 'Lương năm – Toàn bộ',  subtitle: 'Báo cáo lương năm toàn phòng khám (UC4.7).' },
+  '/salary':       { title: 'Quản lý lương' },
 }
 
 export default function MainLayout() {

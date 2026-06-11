@@ -3,6 +3,7 @@ import { NavLink, useNavigate } from 'react-router-dom'
 import {
   HeartPulse, LayoutDashboard, Users, Stethoscope, Tag, ScrollText,
   ChevronRight, ChevronLeft, ChevronDown, UserCog, KeyRound, LogOut, Clock, CalendarDays, CalendarOff, MessageSquare,
+  BarChart3, Receipt, Settings, Grid2x2, RefreshCw, BarChart2, TrendingUp, FileText,
 } from 'lucide-react'
 import { useAuthStore } from '../stores/auth.store'
 
@@ -37,6 +38,24 @@ const menuItems = [
       { label: 'Ca làm việc',          icon: Clock,        path: '/shifts' },
       { label: 'Phân công lịch trực', icon: CalendarDays, path: '/schedules' },
       { label: 'Ngày nghỉ lễ',        icon: CalendarOff,  path: '/holidays' },
+    ]
+  },
+  {
+    section: 'BÁO CÁO',
+    items: [
+      { label: 'Thống kê doanh thu', icon: BarChart3, path: '/stats' },
+    ]
+  },
+  {
+    section: 'QUẢN LÝ LƯƠNG',
+    items: [
+      { label: 'Mức tiền cơ bản',    icon: Settings,   path: '/salary/uc4.1' },
+      { label: 'Hệ số ca làm việc',  icon: Grid2x2,    path: '/salary/uc4.2' },
+      { label: 'Hệ số ca phức tạp',  icon: RefreshCw,  path: '/salary/uc4.3' },
+      { label: 'Lập phiếu lương',    icon: FileText,   path: '/salary/uc4.4' },
+      { label: 'Báo cáo lương tháng',icon: BarChart2,  path: '/salary/uc4.5' },
+      { label: 'Lương năm (1 nhân)', icon: TrendingUp, path: '/salary/uc4.6' },
+      { label: 'Lương năm (toàn bộ)',icon: BarChart3,  path: '/salary/uc4.7' },
     ]
   },
   {

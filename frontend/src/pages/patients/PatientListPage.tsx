@@ -5,6 +5,7 @@ import {
   ChevronLeft, ChevronRight, AlertTriangle, RefreshCw, CalendarPlus,
 } from 'lucide-react'
 import { patientsApi, CLASSIFICATION_META, type PatientRow, type AppointmentHit } from '../../api/patients.api'
+import { useAuthStore } from '../../stores/auth.store'
 
 // ─── Design tokens ────────────────────────────────────────────
 
@@ -40,12 +41,13 @@ function ClassBadge({ cls }: { cls: string }) {
 // ─── Row actions dropdown ─────────────────────────────────────
 
 function RowMenu({
-  patient, onView, onEdit, onDeactivate,
+  patient, onView, onEdit, onDeactivate, canEdit,
 }: {
   patient: PatientRow
   onView:       () => void
   onEdit:       () => void
   onDeactivate: () => void
+  canEdit:      boolean
 }) {
   const [open, setOpen] = useState(false)
   const ref = useRef<HTMLDivElement>(null)
@@ -76,9 +78,9 @@ function RowMenu({
           boxShadow: '0 4px 16px rgba(0,0,0,0.10)', zIndex: 50, minWidth: '170px', padding: '4px',
         }}>
           {[
-            { icon: Eye,     label: 'Xem hồ sơ',   action: onView,       color: '#374151' },
-            { icon: Pencil,  label: 'Chỉnh sửa',    action: onEdit,       color: '#374151' },
-          ].map(item => (
+            { icon: Eye,     label: 'Xem hồ sơ',   action: onView,  color: '#374151', always: true },
+            { icon: Pencil,  label: 'Chỉnh sửa',    action: onEdit,  color: '#374151', always: false },
+          ].filter(item => item.always || canEdit).map(item => (
             <button
               key={item.label}
               onClick={() => { item.action(); setOpen(false) }}
@@ -93,7 +95,7 @@ function RowMenu({
               <item.icon size={14} /> {item.label}
             </button>
           ))}
-          {patient.isActive && (
+          {canEdit && patient.isActive && (
             <>
               <div style={{ height: '1px', backgroundColor: '#f3f4f6', margin: '4px 0' }} />
               <button
@@ -118,7 +120,13 @@ function RowMenu({
 
 // ─── Appointment hint card (A4) ───────────────────────────────
 
-function AppointmentHintCard({ hit, onRegister }: { hit: AppointmentHit; onRegister: () => void }) {
+function AppointmentHintCard({
+  hit, onRegister, canRegister,
+}: {
+  hit: AppointmentHit
+  onRegister: () => void
+  canRegister: boolean
+}) {
   return (
     <div style={{
       display: 'flex', alignItems: 'center', gap: '12px',
@@ -128,23 +136,25 @@ function AppointmentHintCard({ hit, onRegister }: { hit: AppointmentHit; onRegis
       <AlertTriangle size={16} color="#d97706" style={{ flexShrink: 0 }} />
       <div style={{ flex: 1 }}>
         <p style={{ margin: 0, fontSize: '13px', fontWeight: 600, color: '#92400e' }}>
-          Tìm thấy lịch hẹn chưa có hồ sơ: {hit.patientName} – {hit.patientPhone}
+          Lịch hẹn chưa có hồ sơ bệnh nhân: <strong>{hit.patientName}</strong> – {hit.patientPhone}
         </p>
         <p style={{ margin: '2px 0 0', fontSize: '12px', color: '#b45309' }}>
-          Mã lịch hẹn: {hit.code} · {new Date(hit.appointmentDate).toLocaleDateString('vi-VN')}
+          Mã: {hit.code} · {new Date(hit.appointmentDate + 'T12:00:00').toLocaleDateString('vi-VN')}
         </p>
       </div>
-      <button
-        onClick={onRegister}
-        style={{
-          display: 'flex', alignItems: 'center', gap: '5px',
-          padding: '6px 14px', borderRadius: '7px', border: 'none',
-          backgroundColor: '#d97706', color: 'white', fontSize: '12px',
-          fontWeight: 600, cursor: 'pointer', whiteSpace: 'nowrap',
-        }}
-      >
-        <UserPlus size={13} /> Tạo hồ sơ
-      </button>
+      {canRegister && (
+        <button
+          onClick={onRegister}
+          style={{
+            display: 'flex', alignItems: 'center', gap: '5px',
+            padding: '6px 14px', borderRadius: '7px', border: 'none',
+            backgroundColor: '#d97706', color: 'white', fontSize: '12px',
+            fontWeight: 600, cursor: 'pointer', whiteSpace: 'nowrap',
+          }}
+        >
+          <UserPlus size={13} /> Tạo hồ sơ
+        </button>
+      )}
     </div>
   )
 }
@@ -153,6 +163,8 @@ function AppointmentHintCard({ hit, onRegister }: { hit: AppointmentHit; onRegis
 
 export default function PatientListPage() {
   const navigate = useNavigate()
+  const { activeRole } = useAuthStore()
+  const isReceptionist = activeRole === 'RECEPTIONIST' || activeRole === 'ADMIN'
   const [q,             setQ]             = useState('')
   const [debouncedQ,    setDebouncedQ]    = useState('')
   const [page,          setPage]          = useState(1)
@@ -205,27 +217,34 @@ export default function PatientListPage() {
             Tra cứu, tìm kiếm và quản lý hồ sơ bệnh nhân nha khoa.
           </p>
         </div>
-        <button
-          onClick={() => navigate('/staff/patients/new')}
-          style={{
-            display: 'flex', alignItems: 'center', gap: '7px',
-            padding: '10px 20px', borderRadius: '9px', border: 'none',
-            backgroundColor: '#2563eb', color: 'white', fontWeight: 600,
-            fontSize: '13px', cursor: 'pointer',
-          }}
-        >
-          <UserPlus size={15} /> Đăng ký mới
-        </button>
+        {isReceptionist && (
+          <button
+            onClick={() => navigate('/staff/patients/new')}
+            style={{
+              display: 'flex', alignItems: 'center', gap: '7px',
+              padding: '10px 20px', borderRadius: '9px', border: 'none',
+              backgroundColor: '#2563eb', color: 'white', fontWeight: 600,
+              fontSize: '13px', cursor: 'pointer',
+            }}
+          >
+            <UserPlus size={15} /> Đăng ký mới
+          </button>
+        )}
       </div>
 
-      {/* A4: Appointment hints */}
-      {apptHits.map(hit => (
-        <AppointmentHintCard
-          key={hit.id}
-          hit={hit}
-          onRegister={() => navigate(`/staff/patients/new?appointmentId=${hit.id}`)}
-        />
-      ))}
+      {/* A4: Appointment hints — visible to all, but "Tạo hồ sơ" only for receptionist/admin */}
+      {apptHits.length > 0 && (
+        <div style={{ marginBottom: '12px' }}>
+          {apptHits.map(hit => (
+            <AppointmentHintCard
+              key={hit.id}
+              hit={hit}
+              canRegister={isReceptionist}
+              onRegister={() => navigate(`/staff/patients/new?appointmentId=${hit.id}`)}
+            />
+          ))}
+        </div>
+      )}
 
       {/* Search bar */}
       <div style={{ display: 'flex', gap: '12px', marginBottom: '16px' }}>
@@ -357,6 +376,7 @@ export default function PatientListPage() {
                     <td style={td}>
                       <RowMenu
                         patient={p}
+                        canEdit={isReceptionist}
                         onView={() => navigate(`/staff/patients/${p.id}`)}
                         onEdit={() => navigate(`/staff/patients/${p.id}?edit=1`)}
                         onDeactivate={() => handleDeactivate(p.id, p.fullName)}
