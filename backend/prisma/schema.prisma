@@ -736,7 +736,7 @@ model InvoiceItem {
 /// UC4.4/4.5 – Phiếu lương tháng
 model Payslip {
   id           Int       @id @default(autoincrement())
-  userId       INT
+  userId       Int
   month        String                        // 'YYYY-MM'
   role         String                        // 'DOCTOR' | 'RECEPTIONIST' | 'ACCOUNTANT'
   sessionCount Int?                          // Bác sĩ: số ca trực
