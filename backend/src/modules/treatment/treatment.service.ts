@@ -25,6 +25,14 @@ async function generateCode(): Promise<string> {
 
 // ─── Queue: IN_TREATMENT patients today (for doctor) ────────
 
+// Classification sort weight: lower = higher priority
+const CLASS_WEIGHT: Record<string, number> = {
+  VIP:      1,
+  PRIORITY: 2,
+  REGULAR:  3,
+  NEW:      4,
+}
+
 export async function getTreatmentQueue(doctorId?: number) {
   const { start, end } = todayRange()
   const where: any = {
@@ -33,7 +41,7 @@ export async function getTreatmentQueue(doctorId?: number) {
   }
   if (doctorId) where.doctorId = doctorId
 
-  return (prisma as any).reception.findMany({
+  const rows = await (prisma as any).reception.findMany({
     where,
     include: {
       patient: {
@@ -49,7 +57,27 @@ export async function getTreatmentQueue(doctorId?: number) {
         select: { id: true, code: true, status: true, icd10Code: true, icd10Description: true },
       },
     },
-    orderBy: [{ queuePriority: 'asc' }, { arrivedAt: 'asc' }],
+    orderBy: [{ arrivedAt: 'asc' }],
+  })
+
+  // Sort: IN_TREATMENT first → classification (VIP>PRIORITY>REGULAR>NEW) → arrivedAt
+  return rows.sort((a: any, b: any) => {
+    // 1. Bệnh nhân đang điều trị lên đầu
+    const statusA = a.status === 'IN_TREATMENT' ? 0 : 1
+    const statusB = b.status === 'IN_TREATMENT' ? 0 : 1
+    if (statusA !== statusB) return statusA - statusB
+
+    // 2. Phân loại bệnh nhân: VIP > PRIORITY > REGULAR > NEW
+    const clsA = CLASS_WEIGHT[a.patient?.classification] ?? 5
+    const clsB = CLASS_WEIGHT[b.patient?.classification] ?? 5
+    if (clsA !== clsB) return clsA - clsB
+
+    // 3. Số thứ tự (queuePosition) nếu có, rồi arrivedAt
+    const posA = a.queuePosition ?? 9999
+    const posB = b.queuePosition ?? 9999
+    if (posA !== posB) return posA - posB
+
+    return new Date(a.arrivedAt).getTime() - new Date(b.arrivedAt).getTime()
   })
 }
 

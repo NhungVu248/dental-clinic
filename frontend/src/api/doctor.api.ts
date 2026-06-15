@@ -127,4 +127,21 @@ export const doctorApi = {
   }) => api.get<DoctorAppointmentList>('/doctor/appointments', { params }),
   patchStatus: (id: number, status: string) =>
     api.patch(`/doctor/appointments/${id}/status`, { status }),
+  getTodayReceptions: () =>
+    api.get<TodayReception[]>('/doctor/today-receptions'),
+}
+
+export interface TodayReception {
+  id:             number
+  code:           string
+  status:         string
+  visitReason:    string
+  arrivedAt:      string
+  adminNote:      string | null
+  patientId:      number
+  patientName:    string
+  patientPhone:   string
+  patientDob:     string | null
+  patientGender:  string | null
+  classification: string | null
 }

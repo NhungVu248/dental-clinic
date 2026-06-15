@@ -46,6 +46,14 @@ export const listMyAppointments = async (req: Request, res: Response) => {
   }
 }
 
+export const getTodayReceptions = async (req: Request, res: Response) => {
+  try {
+    res.json(await svc.getTodayReceptions(uid(req)))
+  } catch (err: any) {
+    res.status(err.status ?? 500).json({ message: err.message ?? 'Lỗi server' })
+  }
+}
+
 export const patchMyAppointmentStatus = async (req: Request, res: Response) => {
   const id        = Number(req.params.id)
   const newStatus = req.body.status as string

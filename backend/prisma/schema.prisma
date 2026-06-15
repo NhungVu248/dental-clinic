@@ -198,6 +198,7 @@ model DoctorSchedule {
   doctor         User          @relation("doctorschedule_doctorIdTouser", fields: [doctorId], references: [id], map: "DoctorSchedule_doctorId_fkey")
   serviceGroup   ServiceGroup? @relation(fields: [serviceGroupId], references: [id], map: "DoctorSchedule_serviceGroupId_fkey")
   shift          WorkShift     @relation(fields: [shiftId], references: [id], map: "DoctorSchedule_shiftId_fkey")
+  receptions     Reception[]
 
   @@unique([doctorId, shiftId, workDate], map: "DoctorSchedule_doctorId_shiftId_workDate_key")
   @@index([createdBy], map: "DoctorSchedule_createdBy_fkey")
@@ -223,6 +224,7 @@ model Reception {
   appointmentId  Int?         @unique
   receptionistId Int
   doctorId       Int?
+  scheduleId     Int?
   chairId        Int?
 
   arrivedAt      DateTime     @default(now())
@@ -243,6 +245,7 @@ model Reception {
   appointment    Appointment?  @relation(fields: [appointmentId],  references: [id], map: "Reception_appointmentId_fkey")
   receptionist   User          @relation("Reception_receptionist", fields: [receptionistId], references: [id], map: "Reception_receptionistId_fkey")
   doctor         User?         @relation("Reception_doctor",       fields: [doctorId],       references: [id], map: "Reception_doctorId_fkey")
+  schedule       DoctorSchedule? @relation(fields: [scheduleId],  references: [id], map: "Reception_scheduleId_fkey")
   chair          DentalChair?  @relation(fields: [chairId],        references: [id], map: "Reception_chairId_fkey")
   dentalRecord   DentalRecord?
   invoice        Invoice?
@@ -250,6 +253,7 @@ model Reception {
   @@index([patientId],      map: "Reception_patientId_idx")
   @@index([receptionistId], map: "Reception_receptionistId_idx")
   @@index([doctorId],       map: "Reception_doctorId_idx")
+  @@index([scheduleId],     map: "Reception_scheduleId_idx")
   @@index([chairId],        map: "Reception_chairId_idx")
   @@index([status],         map: "Reception_status_idx")
   @@index([arrivedAt],      map: "Reception_arrivedAt_idx")

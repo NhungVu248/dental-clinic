@@ -6,7 +6,9 @@ const roles = (req: Request): string[] => (req as any).user?.roles ?? []
 
 export const getQueue = async (req: Request, res: Response) => {
   try {
-    const doctorId = req.query.doctorId ? Number(req.query.doctorId) : undefined
+    // Nếu query truyền doctorId thì dùng, nếu không và user là DOCTOR thì tự lọc theo bản thân
+    let doctorId: number | undefined = req.query.doctorId ? Number(req.query.doctorId) : undefined
+    if (!doctorId && roles(req).includes('DOCTOR')) doctorId = uid(req)
     const queue = await svc.getTreatmentQueue(doctorId)
     res.json(queue)
   } catch (err) { console.error(err); res.status(500).json({ message: 'Lỗi server' }) }

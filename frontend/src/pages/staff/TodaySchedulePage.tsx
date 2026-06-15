@@ -6,7 +6,7 @@ import {
   CalendarDays, ChevronDown, ChevronUp, FileText,
 } from 'lucide-react'
 import { doctorApi } from '../../api/doctor.api'
-import type { DoctorAppointment, AptView } from '../../api/doctor.api'
+import type { DoctorAppointment, AptView, TodayReception } from '../../api/doctor.api'
 
 // ─── Constants & helpers ──────────────────────────────────────
 
@@ -300,18 +300,79 @@ function StatusFilter({ value, counts, onChange }: {
 // Main Page
 // ═══════════════════════════════════════════════════════════
 
+const VISIT_REASON_LABEL: Record<string, string> = {
+  NEW_EXAM: 'Khám mới', REVISIT: 'Tái khám', TREATMENT: 'Điều trị theo kế hoạch',
+  SCALING: 'Cạo vôi răng', BRACES: 'Niềng răng', WHITENING: 'Tẩy trắng răng',
+  PAYMENT: 'Thanh toán công nợ', PICKUP: 'Lấy hồ sơ', CONSULTATION: 'Tư vấn', OTHER: 'Khác',
+}
+
+const REC_STATUS_META: Record<string, { label: string; color: string; bg: string }> = {
+  WAITING:         { label: 'Chờ vào ghế',    color: '#d97706', bg: '#fffbeb' },
+  IN_TREATMENT:    { label: 'Đang điều trị',   color: '#7c3aed', bg: '#f5f3ff' },
+  WAITING_PAYMENT: { label: 'Chờ thanh toán',  color: '#0891b2', bg: '#ecfeff' },
+  COMPLETED:       { label: 'Hoàn tất',        color: '#059669', bg: '#ecfdf5' },
+  ABSENT:          { label: 'Vắng mặt',        color: '#6b7280', bg: '#f3f4f6' },
+  CANCELLED:       { label: 'Đã hủy',          color: '#dc2626', bg: '#fff1f2' },
+}
+
+function WalkInCard({ rec }: { rec: TodayReception }) {
+  const meta = REC_STATUS_META[rec.status] ?? { label: rec.status, color: '#6b7280', bg: '#f3f4f6' }
+  const arrivedTime = new Date(rec.arrivedAt)
+  const timeStr = `${pad2(arrivedTime.getHours())}:${pad2(arrivedTime.getMinutes())}`
+  return (
+    <div style={{
+      backgroundColor: 'white',
+      border: `1.5px solid ${meta.bg}`,
+      borderLeft: `4px solid ${meta.color}`,
+      borderRadius: '12px',
+      padding: '14px 16px',
+      display: 'flex', alignItems: 'center', gap: '14px',
+      boxShadow: '0 1px 3px rgba(0,0,0,0.06)',
+    }}>
+      <div style={{ textAlign: 'center', minWidth: '52px', flexShrink: 0 }}>
+        <p style={{ fontSize: '18px', fontWeight: 800, color: meta.color, lineHeight: 1 }}>{timeStr}</p>
+        <p style={{ fontSize: '10px', color: '#9ca3af', marginTop: '2px' }}>Check-in</p>
+      </div>
+      <div style={{ width: '1px', height: '48px', backgroundColor: '#f3f4f6', flexShrink: 0 }} />
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px', flexWrap: 'wrap' }}>
+          <p style={{ fontSize: '14px', fontWeight: 700, color: '#111827', margin: 0 }}>{rec.patientName}</p>
+          <span style={{ fontSize: '11px', color: '#7c3aed', fontWeight: 600 }}>{rec.code}</span>
+          <span style={{
+            display: 'inline-flex', alignItems: 'center', gap: '4px',
+            padding: '3px 10px', borderRadius: '99px', fontSize: '12px', fontWeight: 600,
+            color: meta.color, backgroundColor: meta.bg,
+          }}>{meta.label}</span>
+          <span style={{ fontSize: '11px', color: '#9ca3af', backgroundColor: '#f3f4f6', padding: '2px 7px', borderRadius: '99px' }}>
+            Walk-in
+          </span>
+        </div>
+        <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
+          <span style={{ fontSize: '12px', color: '#6b7280', display: 'flex', alignItems: 'center', gap: '4px' }}>
+            <Phone size={11} /> {rec.patientPhone}
+          </span>
+          <span style={{ fontSize: '12px', color: '#6b7280', display: 'flex', alignItems: 'center', gap: '4px' }}>
+            <Stethoscope size={11} /> {VISIT_REASON_LABEL[rec.visitReason] ?? rec.visitReason}
+          </span>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 export default function TodaySchedulePage() {
   const today = toLocalStr(new Date())
 
-  const [view,    setView]    = useState<AptView>('day')
-  const [refDate, setRefDate] = useState(today)
-  const [search,  setSearch]  = useState('')
-  const [statusF, setStatusF] = useState('')
-  const [items,   setItems]   = useState<DoctorAppointment[]>([])
-  const [counts,  setCounts]  = useState<Record<string, number>>({})
-  const [loading, setLoading] = useState(false)
-  const [busyId,  setBusyId]  = useState<number | null>(null)
-  const [toast,   setToast]   = useState<{ msg: string; type: 'success' | 'error' } | null>(null)
+  const [view,        setView]        = useState<AptView>('day')
+  const [refDate,     setRefDate]     = useState(today)
+  const [search,      setSearch]      = useState('')
+  const [statusF,     setStatusF]     = useState('')
+  const [items,       setItems]       = useState<DoctorAppointment[]>([])
+  const [counts,      setCounts]      = useState<Record<string, number>>({})
+  const [walkIns,     setWalkIns]     = useState<TodayReception[]>([])
+  const [loading,     setLoading]     = useState(false)
+  const [busyId,      setBusyId]      = useState<number | null>(null)
+  const [toast,       setToast]       = useState<{ msg: string; type: 'success' | 'error' } | null>(null)
 
   const searchTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const [dSearch, setDSearch] = useState('')
@@ -324,17 +385,24 @@ export default function TodaySchedulePage() {
   const load = useCallback(async () => {
     setLoading(true)
     try {
-      const res = await doctorApi.getMyAppointments({
-        view, date: refDate,
-        status: statusF || undefined,
-        search: dSearch  || undefined,
-        limit: 100,
-      })
-      setItems(res.data.items)
-      setCounts(res.data.statusCounts)
+      const [aptRes, recRes] = await Promise.all([
+        doctorApi.getMyAppointments({
+          view, date: refDate,
+          status: statusF || undefined,
+          search: dSearch  || undefined,
+          limit: 100,
+        }),
+        // Only fetch walk-ins when viewing today in day view
+        (view === 'day' && refDate === today)
+          ? doctorApi.getTodayReceptions()
+          : Promise.resolve({ data: [] as any }),
+      ])
+      setItems(aptRes.data.items)
+      setCounts(aptRes.data.statusCounts)
+      setWalkIns(Array.isArray(recRes.data) ? recRes.data : [])
     } catch { /* silent */ }
     finally { setLoading(false) }
-  }, [view, refDate, statusF, dSearch])
+  }, [view, refDate, statusF, dSearch, today])
 
   useEffect(() => { load() }, [load])
 
@@ -358,10 +426,10 @@ export default function TodaySchedulePage() {
     } finally { setBusyId(null) }
   }
 
-  const totalApts = Object.values(counts).reduce((a, b) => a + b, 0)
-  const inProgress = counts['IN_PROGRESS'] ?? 0
-  const checkedIn  = counts['CHECKED_IN']  ?? 0
-  const completed  = counts['COMPLETED']   ?? 0
+  const totalApts  = Object.values(counts).reduce((a, b) => a + b, 0)
+  const inProgress = (counts['IN_PROGRESS'] ?? 0) + walkIns.filter(r => r.status === 'IN_TREATMENT').length
+  const checkedIn  = (counts['CHECKED_IN']  ?? 0) + walkIns.filter(r => r.status === 'WAITING').length
+  const completed  = (counts['COMPLETED']   ?? 0) + walkIns.filter(r => r.status === 'COMPLETED').length
 
   const todayLabel = fmtDateLabel(refDate, view)
   const todayMark  = view === 'day' && isToday(refDate)
@@ -575,6 +643,21 @@ export default function TodaySchedulePage() {
           <p style={{ fontSize: '12px', color: '#9ca3af', textAlign: 'center', margin: '4px 0 0' }}>
             Hiển thị {items.length} lịch hẹn
           </p>
+        </div>
+      )}
+
+      {/* ── Walk-in patients (tiếp đón không có lịch hẹn) ── */}
+      {view === 'day' && refDate === today && walkIns.length > 0 && (
+        <div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', margin: '8px 0 10px' }}>
+            <User size={14} color="#7c3aed" />
+            <p style={{ fontSize: '11px', fontWeight: 700, color: '#7c3aed', margin: 0, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+              Bệnh nhân tiếp đón hôm nay ({walkIns.length})
+            </p>
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+            {walkIns.map(rec => <WalkInCard key={rec.id} rec={rec} />)}
+          </div>
         </div>
       )}
 

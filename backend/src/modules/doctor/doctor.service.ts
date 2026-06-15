@@ -37,7 +37,9 @@ function generateSlotTimes(startTime: string, endTime: string, slotDuration: num
 function aptInShift(aptDate: Date, shiftStart: string, shiftEnd: string): boolean {
   const [sH, sM] = shiftStart.split(':').map(Number)
   const [eH, eM] = shiftEnd.split(':').map(Number)
-  const mins = aptDate.getHours() * 60 + aptDate.getMinutes()
+  // appointmentDate được lưu/đọc theo giờ "wall-clock" trong trường UTC
+  // (giống workDate & ranh giới tuần đều dùng getUTC*), nên so sánh cũng phải dùng UTC
+  const mins = aptDate.getUTCHours() * 60 + aptDate.getUTCMinutes()
   return mins >= sH * 60 + sM && mins < eH * 60 + eM
 }
 
@@ -131,11 +133,10 @@ export const getMySchedule = async (doctorId: number, weekStart: string) => {
       return sd.toISOString().slice(0, 10) === wd.date
     })
 
-    const dayStart = new Date(wd.date + 'T00:00:00')
-    const dayEnd   = new Date(wd.date + 'T23:59:59')
     const dayApts  = appointments.filter(a => {
+      // wd.date là ngày theo UTC ('YYYY-MM-DD'); so khớp theo UTC để tránh lệch múi giờ
       const ad = new Date(a.appointmentDate)
-      return ad >= dayStart && ad <= dayEnd
+      return ad.toISOString().slice(0, 10) === wd.date
     })
 
     const shifts = dayScheds.map(sch => {
@@ -267,11 +268,10 @@ export const getGroupSchedule = async (doctorId: number, weekStart: string) => {
   for (const apt of appointments) {
     if (!apt.doctorId) continue
     const ad      = new Date(apt.appointmentDate)
-    const dateStr = `${ad.getFullYear()}-${pad2(ad.getMonth()+1)}-${pad2(ad.getDate())}`
+    const dateStr = ad.toISOString().slice(0, 10)   // UTC date – đồng bộ với aptInShift (UTC)
     const matchedSch = schedules.find(sch => {
       if (sch.doctorId !== apt.doctorId) return false
-      const sd    = new Date(sch.workDate)
-      const sdStr = `${sd.getFullYear()}-${pad2(sd.getMonth()+1)}-${pad2(sd.getDate())}`
+      const sdStr = new Date(sch.workDate).toISOString().slice(0, 10)
       return sdStr === dateStr && aptInShift(ad, sch.shift.startTime, sch.shift.endTime)
     })
     if (matchedSch) {
@@ -295,8 +295,7 @@ export const getGroupSchedule = async (doctorId: number, weekStart: string) => {
 
     for (const wd of weekDays) {
       const dayScheds = schedules.filter(s => {
-        const sd    = new Date(s.workDate)
-        const sdStr = `${sd.getFullYear()}-${pad2(sd.getMonth()+1)}-${pad2(sd.getDate())}`
+        const sdStr = new Date(s.workDate).toISOString().slice(0, 10)
         return sdStr === wd.date && s.doctorId === d.id
       })
       if (dayScheds.length > 0) {
@@ -445,3 +444,43 @@ export const listMyAppointments = async (
 
 // Re-export so controller can call it
 export { updateAppointmentStatus as patchStatus }
+
+// ─── Today's walk-in receptions for doctor ───────────────────
+
+export const getTodayReceptions = async (doctorId: number) => {
+  const now   = new Date()
+  const start = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0, 0)
+  const end   = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999)
+
+  const rows = await prisma.$queryRaw<any[]>`
+    SELECT
+      r.id, r.code, r.status, r.visitReason, r.arrivedAt, r.adminNote,
+      p.id         AS patientId,
+      p.fullName   AS patientName,
+      p.phone      AS patientPhone,
+      p.dateOfBirth AS patientDob,
+      p.gender     AS patientGender,
+      p.classification AS classification
+    FROM reception r
+    JOIN patient p ON p.id = r.patientId
+    WHERE r.doctorId  = ${doctorId}
+      AND r.arrivedAt >= ${start}
+      AND r.arrivedAt <= ${end}
+    ORDER BY r.arrivedAt ASC
+  `
+
+  return rows.map(r => ({
+    id:            Number(r.id),
+    code:          r.code  as string,
+    status:        r.status as string,
+    visitReason:   r.visitReason as string,
+    arrivedAt:     r.arrivedAt instanceof Date ? r.arrivedAt.toISOString() : String(r.arrivedAt),
+    adminNote:     r.adminNote ?? null,
+    patientId:     Number(r.patientId),
+    patientName:   r.patientName  as string,
+    patientPhone:  r.patientPhone as string,
+    patientDob:    r.patientDob   ? (r.patientDob instanceof Date ? r.patientDob.toISOString().slice(0, 10) : String(r.patientDob).slice(0, 10)) : null,
+    patientGender: r.patientGender ?? null,
+    classification: r.classification ?? null,
+  }))
+}

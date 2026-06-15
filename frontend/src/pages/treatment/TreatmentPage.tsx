@@ -6,6 +6,7 @@ import {
 } from 'lucide-react'
 import { treatmentApi } from '../../api/treatment.api'
 import type { TreatmentQueueItem, DentalRecord, ServiceOption, SaveDraftPayload } from '../../api/treatment.api'
+import { useAuthStore } from '../../stores/auth.store'
 import ToothChart from '../patients/components/ToothChart'
 import type { ToothChartData } from '../../api/patients.api'
 
@@ -262,8 +263,11 @@ function QueueCard({
 
 // ─── Main Page ────────────────────────────────────────────────
 
-export default function TreatmentPage() {
+// Classification sort weight for client-side display
+const CLASS_ORDER: Record<string, number> = { VIP: 1, PRIORITY: 2, REGULAR: 3, NEW: 4 }
 
+export default function TreatmentPage() {
+  const { user, activeRole } = useAuthStore()
 
   const [queue,      setQueue]      = useState<TreatmentQueueItem[]>([])
   const [services,   setServices]   = useState<ServiceOption[]>([])
@@ -292,15 +296,27 @@ export default function TreatmentPage() {
   // ── Load queue & services ──────────────────────────────────
   const fetchQueue = useCallback(async () => {
     try {
+      // Bác sĩ chỉ xem danh sách bệnh nhân của mình; admin/receptionist xem tất cả
+      const doctorId = activeRole === 'DOCTOR' ? user?.id : undefined
       const [q, s] = await Promise.all([
-        treatmentApi.getQueue(),
+        treatmentApi.getQueue(doctorId),
         treatmentApi.getServices(),
       ])
-      setQueue(q)
+      // Client-side sort: IN_TREATMENT lên đầu → phân loại → thứ tự đến
+      const sorted = [...q].sort((a, b) => {
+        const sA = a.status === 'IN_TREATMENT' ? 0 : 1
+        const sB = b.status === 'IN_TREATMENT' ? 0 : 1
+        if (sA !== sB) return sA - sB
+        const cA = CLASS_ORDER[a.patient.classification] ?? 5
+        const cB = CLASS_ORDER[b.patient.classification] ?? 5
+        if (cA !== cB) return cA - cB
+        return new Date(a.arrivedAt).getTime() - new Date(b.arrivedAt).getTime()
+      })
+      setQueue(sorted)
       setServices(s)
     } catch { /* ignore */ }
     finally { setLoading(false) }
-  }, [])
+  }, [user?.id, activeRole])
 
   useEffect(() => { fetchQueue() }, [fetchQueue])
 
